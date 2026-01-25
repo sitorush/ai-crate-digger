@@ -24,5 +24,16 @@ main.add_command(playlist)
 main.add_command(stats)
 
 
+@click.command("mcp-server")
+def mcp_server() -> None:
+    """Run MCP server for Claude Desktop."""
+    from dj_catalog.mcp.server import main as mcp_main
+
+    mcp_main()
+
+
+main.add_command(mcp_server)
+
+
 if __name__ == "__main__":
     main()
