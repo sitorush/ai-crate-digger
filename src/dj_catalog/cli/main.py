@@ -6,6 +6,7 @@ from rich.console import Console
 from dj_catalog.cli.playlist import playlist
 from dj_catalog.cli.scan import scan
 from dj_catalog.cli.search import search
+from dj_catalog.cli.stats import stats
 
 console = Console()
 
@@ -20,6 +21,7 @@ def main() -> None:
 main.add_command(scan)
 main.add_command(search)
 main.add_command(playlist)
+main.add_command(stats)
 
 
 if __name__ == "__main__":
