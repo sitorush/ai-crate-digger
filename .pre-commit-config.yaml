@@ -3,17 +3,17 @@ repos:
     hooks:
       - id: ruff-format
         name: ruff format
-        entry: .venv/bin/ruff format
+        entry: uv run ruff format
         language: system
         types: [python]
       - id: ruff-lint
         name: ruff lint
-        entry: .venv/bin/ruff check --fix
+        entry: uv run ruff check --fix
         language: system
         types: [python]
       - id: mypy
         name: mypy
-        entry: .venv/bin/mypy src/
+        entry: uv run mypy src/
         language: system
         types: [python]
         pass_filenames: false
