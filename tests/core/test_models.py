@@ -87,3 +87,12 @@ class TestTrack:
                 file_hash="abc",
                 rating=6,
             )
+
+    def test_track_danceability_validation(self) -> None:
+        """Danceability must be between 0 and 1."""
+        with pytest.raises(ValueError, match="less than or equal to 1"):
+            Track(
+                file_path=Path("/music/song.mp3"),
+                file_hash="abc",
+                danceability=1.5,
+            )

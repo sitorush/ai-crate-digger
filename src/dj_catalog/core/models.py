@@ -1,6 +1,6 @@
 """Core domain models."""
 
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 from pathlib import Path
 
 from pydantic import BaseModel, Field
@@ -50,11 +50,11 @@ class Track(BaseModel):
     # User-defined
     rating: int | None = Field(default=None, ge=1, le=5)
     color: str | None = None
-    play_count: int = 0
+    play_count: int = Field(default=0, ge=0)
 
     # System
     analyzed_at: datetime | None = None
-    created_at: datetime = Field(default_factory=datetime.now)
-    updated_at: datetime = Field(default_factory=datetime.now)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(tz=timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(tz=timezone.utc))
 
     model_config = {"frozen": False}
