@@ -36,3 +36,22 @@ def sample_wav(tmp_dir: Path) -> Path:
         samples = [0] * 44100
         f.writeframes(struct.pack("<" + "h" * len(samples), *samples))
     return wav_path
+
+
+@pytest.fixture
+def sample_track():
+    """Create a sample track for testing."""
+    from dj_catalog.core.models import Track
+
+    return Track(
+        file_path=Path("/music/test.mp3"),
+        file_hash="abc123",
+        title="Test Track",
+        artist="Test Artist",
+        bpm=128.0,
+        key_camelot="8A",
+        tags=["House", "Tech House"],
+        duration_seconds=180.0,
+        energy=0.8,
+        danceability=0.7,
+    )
