@@ -13,6 +13,10 @@ class Settings(BaseSettings):
     # Paths
     db_path: Path = Field(default_factory=lambda: Path.home() / ".dj-catalog" / "catalog.db")
     vector_path: Path = Field(default_factory=lambda: Path.home() / ".dj-catalog" / ".chroma")
+    output_path: Path = Field(
+        default_factory=lambda: Path.home() / "Downloads",
+        description="Default directory for exported playlists",
+    )
 
     # Performance
     max_workers: int | None = None  # None = auto-detect (cpu_count - 1)

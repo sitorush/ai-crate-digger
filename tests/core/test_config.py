@@ -26,3 +26,16 @@ class TestSettings:
         s1 = get_settings()
         s2 = get_settings()
         assert s1 is s2
+
+
+def test_settings_default_output_path():
+    """Test default output_path is ~/Downloads."""
+    settings = Settings()
+    assert settings.output_path == Path.home() / "Downloads"
+
+
+def test_settings_custom_output_path(monkeypatch, tmp_path):
+    """Test custom output_path via env var."""
+    monkeypatch.setenv("DJ_CATALOG_OUTPUT_PATH", str(tmp_path))
+    settings = Settings()
+    assert settings.output_path == tmp_path
