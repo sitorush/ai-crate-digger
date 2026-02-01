@@ -20,6 +20,7 @@ from dj_catalog.playlist import (
     generate_playlist,
 )
 from dj_catalog.playlist.generator import Playlist
+from dj_catalog.playlist.harmonic import harmonic_distance
 from dj_catalog.storage import Database, VectorStore
 
 
@@ -106,6 +107,104 @@ def _get_example_path(filename: str = "playlist.m3u") -> str:
     if platform.system() == "Windows":
         return f"{home}\\Desktop\\{filename}"
     return f"{home}/Desktop/{filename}"
+
+
+async def _get_candidate_pool(
+    db: Database,
+    tags: list[str] | None,
+    bpm_min: float | None,
+    bpm_max: float | None,
+    energy_min: float | None,
+    reference_key: str | None,
+    exclude_hashes: list[str],
+    sort_by: str,
+    limit: int,
+) -> str:
+    """Get filtered and sorted candidate tracks for playlist building.
+
+    Filters tracks by:
+    - Tags (must have at least one matching tag if tags provided)
+    - BPM range (if specified)
+    - Energy minimum (if specified)
+    - Key compatibility (harmonic_distance <= 1 if reference_key provided)
+    - Exclude stems (files with .stem. in path)
+    - Exclude unknown artists (artist is None)
+    - Exclude specified hashes
+
+    Args:
+        db: Database instance
+        tags: List of tags to filter by (OR logic - any match)
+        bpm_min: Minimum BPM (inclusive)
+        bpm_max: Maximum BPM (inclusive)
+        energy_min: Minimum energy (inclusive)
+        reference_key: Camelot key for harmonic filtering
+        exclude_hashes: List of hashes to exclude
+        sort_by: Sort method (random, bpm_asc, bpm_desc, energy_desc, danceability_desc)
+        limit: Maximum number of results
+
+    Returns:
+        JSON array of compact track objects with fields:
+        hash, artist, title, bpm, key, energy, danceability, tags, duration_sec
+    """
+    # Step 1: Get all tracks from database
+    all_tracks = db.get_all_tracks()
+
+    # Step 2: Filter by tags (if provided)
+    if tags:
+        all_tracks = [t for t in all_tracks if any(tag in t.tags for tag in tags)]
+
+    # Step 3: Filter by BPM range
+    if bpm_min is not None:
+        all_tracks = [t for t in all_tracks if t.bpm is not None and t.bpm >= bpm_min]
+    if bpm_max is not None:
+        all_tracks = [t for t in all_tracks if t.bpm is not None and t.bpm <= bpm_max]
+
+    # Step 4: Filter by energy minimum
+    if energy_min is not None:
+        all_tracks = [t for t in all_tracks if t.energy is not None and t.energy >= energy_min]
+
+    # Step 5: Filter by key compatibility (harmonic_distance <= 1)
+    if reference_key is not None:
+        all_tracks = [
+            t
+            for t in all_tracks
+            if t.key_camelot is not None and harmonic_distance(reference_key, t.key_camelot) <= 1
+        ]
+
+    # Step 6: Exclude stems (files with .stem. in path)
+    all_tracks = [t for t in all_tracks if ".stem." not in str(t.file_path).lower()]
+
+    # Step 7: Exclude unknown artists
+    all_tracks = [t for t in all_tracks if t.artist is not None]
+
+    # Step 8: Exclude specified hashes
+    if exclude_hashes:
+        exclude_set = set(exclude_hashes)
+        all_tracks = [t for t in all_tracks if t.file_hash not in exclude_set]
+
+    # Step 9: Sort tracks
+    all_tracks = _sort_candidates(all_tracks, sort_by)
+
+    # Step 10: Apply limit
+    all_tracks = all_tracks[:limit]
+
+    # Step 11: Convert to compact JSON format
+    compact_tracks = [
+        {
+            "hash": t.file_hash,
+            "artist": t.artist,
+            "title": t.title,
+            "bpm": t.bpm,
+            "key": t.key_camelot,
+            "energy": t.energy,
+            "danceability": t.danceability,
+            "tags": t.tags,
+            "duration_sec": t.duration_seconds,
+        }
+        for t in all_tracks
+    ]
+
+    return json.dumps(compact_tracks)
 
 
 def register_tools(server: Server) -> None:
