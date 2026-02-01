@@ -306,6 +306,88 @@ async def _validate_playlist_order(db: Database, args: dict[str, Any]) -> list[T
     return [TextContent(type="text", text=json.dumps(result, indent=2))]
 
 
+async def _build_playlist(db: Database, args: dict[str, Any]) -> list[TextContent]:
+    """Export ordered track list to playlist file."""
+    name = args["name"]
+    hashes = args["hashes"]
+    format_ = args.get("format", "m3u")
+    should_validate = args.get("validate", True)
+
+    # Handle output_path with smart defaults
+    # Create fresh Settings instance to pick up env var changes in tests
+    settings = Settings()
+    output_path: Path
+    if output_path_str := args.get("output_path"):
+        # User provided path - validate it
+        validated_path, error = _validate_output_path(output_path_str)
+        if error or validated_path is None:
+            return [TextContent(type="text", text=json.dumps({"success": False, "error": error}))]
+        output_path = validated_path
+    else:
+        # No path provided - use smart default (env var or ~/Downloads)
+        output_dir = settings.output_path
+        output_dir.mkdir(parents=True, exist_ok=True)
+
+        # Sanitize playlist name for filename
+        safe_name = name.replace(" ", "_").replace("/", "-").replace("\\", "-")
+        ext = ".xml" if format_ == "rekordbox" else ".m3u"
+        output_path = output_dir / f"{safe_name}{ext}"
+
+    # Look up tracks (with partial hash support)
+    all_tracks = db.get_all_tracks()
+    tracks = []
+    for h in hashes:
+        found = next((t for t in all_tracks if t.file_hash.startswith(h)), None)
+        if found:
+            tracks.append(found)
+
+    if not tracks:
+        return [
+            TextContent(
+                type="text",
+                text=json.dumps({"success": False, "error": "No tracks found for provided hashes"}),
+            )
+        ]
+
+    # Validate if requested
+    validation_result = None
+    if should_validate:
+        # Reuse validation logic
+        validation_result = await _validate_playlist_order(db, {"hashes": hashes})
+        validation_result = json.loads(validation_result[0].text)
+
+    # Create playlist
+    playlist = Playlist(
+        name=name, tracks=tracks, total_duration=sum(t.duration_seconds or 0 for t in tracks)
+    )
+
+    # Export
+    try:
+        export_playlist(playlist, output_path, output_format=format_)
+
+        result = {
+            "success": True,
+            "output_path": str(output_path),
+            "track_count": len(tracks),
+            "total_duration_min": playlist.total_duration / 60,
+        }
+
+        if validation_result:
+            result["validation"] = validation_result
+
+        return [TextContent(type="text", text=json.dumps(result, indent=2))]
+
+    except (PermissionError, OSError) as e:
+        return [
+            TextContent(
+                type="text",
+                text=json.dumps(
+                    {"success": False, "error": str(e), "suggestion": _get_example_path()}
+                ),
+            )
+        ]
+
+
 def register_tools(server: Server) -> None:
     """Register all tools with the MCP server."""
 
