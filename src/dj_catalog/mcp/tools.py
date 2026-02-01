@@ -1,5 +1,6 @@
 """MCP tool definitions for DJ Catalog."""
 
+import json  # noqa: F401 - required for future MCP tool usage
 import platform
 import random
 import re
