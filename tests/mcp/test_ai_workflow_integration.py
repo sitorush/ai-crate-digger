@@ -147,7 +147,8 @@ async def test_ai_workflow_with_incompatible_tracks(db_with_workflow_tracks, tmp
     pool_data = json.loads(pool_result)
 
     # Step 2: AI picks incompatible tracks (house -> techno)
-    house_track = next(t for t in pool_data if "House" in t["tags"])
+    # Specifically select house001 (8A) for deterministic testing
+    house_track = next(t for t in pool_data if t["hash"] == "house001")
     techno_track = next(t for t in pool_data if "Techno" in t["tags"])
     selected_hashes = [house_track["hash"], techno_track["hash"]]
 
@@ -156,8 +157,14 @@ async def test_ai_workflow_with_incompatible_tracks(db_with_workflow_tracks, tmp
     validate_result = await _validate_playlist_order(db_with_workflow_tracks, validate_args)
     validate_data = json.loads(validate_result[0].text)
 
-    # Should be invalid (BPM jump, key clash, tag mismatch)
-    assert validate_data["valid"] is False
-    assert len(validate_data["issues"]) >= 2  # At least BPM jump and tag mismatch
+    # Under new validation rules:
+    # - 8A→1A is distance 5 with same mode = semitone shift (info severity)
+    # - BPM jump of 12 = warning
+    # - Tag mismatch = warning
+    # Only errors make valid=False, so this playlist is technically valid but has issues
+    assert validate_data["valid"] is True  # No error-severity issues
+    assert (
+        len(validate_data["issues"]) >= 2
+    )  # BPM jump (warning) + tag mismatch (warning) + semitone (info)
 
     # Step 4: AI would fix issues here (simulated - skip export)

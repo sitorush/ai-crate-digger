@@ -58,6 +58,40 @@ def _sort_candidates(tracks: list[Track], sort_by: str) -> list[Track]:
     return tracks  # Unknown sort_by, return as-is
 
 
+def _is_diagonal_camelot(key1: str | None, key2: str | None) -> bool:
+    """Check if two Camelot keys are diagonal (number +/-1 with A/B flip).
+
+    Examples:
+        1B → 2A: True (diagonal)
+        3A → 2B: True (diagonal)
+        4A → 6A: False (same mode, energy shift)
+
+    Args:
+        key1: First Camelot key
+        key2: Second Camelot key
+
+    Returns:
+        True if keys are diagonal on Camelot wheel
+    """
+    if not key1 or not key2:
+        return False
+
+    try:
+        num1 = int(key1[:-1])
+        num2 = int(key2[:-1])
+        mode1 = key1[-1].upper()
+        mode2 = key2[-1].upper()
+    except (ValueError, IndexError):
+        return False
+
+    # Diagonal = adjacent numbers (distance 1) with different modes
+    forward = (num2 - num1) % 12
+    backward = (num1 - num2) % 12
+    wheel_dist = min(forward, backward)
+
+    return wheel_dist == 1 and mode1 != mode2
+
+
 def _validate_output_path(path_str: str) -> tuple[Path | None, str | None]:
     """Validate and resolve output path, returning (resolved_path, error_message).
 
@@ -262,6 +296,7 @@ async def _validate_playlist_order(db: Database, args: dict[str, Any]) -> list[T
             issues.append(
                 {
                     "type": "bpm_jump",
+                    "severity": "warning",
                     "position": i + 1,
                     "from": _compact_track(curr),
                     "to": _compact_track(next_t),
@@ -269,24 +304,53 @@ async def _validate_playlist_order(db: Database, args: dict[str, Any]) -> list[T
                 }
             )
 
-        # Key clash
+        # Key clash - updated rules based on Camelot wheel
         dist = harmonic_distance(curr.key_camelot, next_t.key_camelot)
-        if dist > 1:
+
+        # Check if same mode (for semitone shift detection)
+        same_mode = False
+        if (
+            curr.key_camelot
+            and next_t.key_camelot
+            and len(curr.key_camelot) >= 2
+            and len(next_t.key_camelot) >= 2
+        ):
+            same_mode = curr.key_camelot[-1].upper() == next_t.key_camelot[-1].upper()
+
+        # Distance 0-2 and diagonals are compatible
+        # Distance 5 with same mode is semitone shift (7 steps other direction, info only)
+        # Distance 3-6 (excluding semitone) are real clashes
+        if dist == 5 and same_mode:
+            # Semitone shift: 5 steps min direction = 7 steps other direction
             issues.append(
                 {
-                    "type": "key_clash",
+                    "type": "key_semitone",
+                    "severity": "info",
                     "position": i + 1,
                     "from": _compact_track(curr),
                     "to": _compact_track(next_t),
-                    "detail": f"Harmonic distance {dist} (max compatible: 1)",
+                    "detail": f"Semitone shift (harmonic distance {dist})",
                 }
             )
+        elif dist >= 3 and dist <= 6:
+            issues.append(
+                {
+                    "type": "key_clash",
+                    "severity": "error",
+                    "position": i + 1,
+                    "from": _compact_track(curr),
+                    "to": _compact_track(next_t),
+                    "detail": f"Harmonic clash (distance {dist})",
+                }
+            )
+        # Distance 2 and diagonals are allowed (no flag)
 
         # Tag mismatch (warning only)
         if not set(curr.tags) & set(next_t.tags):
             issues.append(
                 {
                     "type": "tag_mismatch",
+                    "severity": "warning",
                     "position": i + 1,
                     "from": _compact_track(curr),
                     "to": _compact_track(next_t),
@@ -294,8 +358,12 @@ async def _validate_playlist_order(db: Database, args: dict[str, Any]) -> list[T
                 }
             )
 
+    # Only count error-severity issues (key clashes with distance 3-6) for valid field
+    # BPM jumps, tag mismatches, and semitone shifts are warnings, not errors
+    error_issues = [i for i in issues if i.get("severity") == "error"]
+
     result = {
-        "valid": len(issues) == 0 and len(duplicates) == 0 and len(same_song_dups) == 0,
+        "valid": len(error_issues) == 0 and len(duplicates) == 0 and len(same_song_dups) == 0,
         "track_count": len(tracks),
         "total_duration_min": sum(t.duration_seconds or 0 for t in tracks) / 60,
         "issues": issues,
