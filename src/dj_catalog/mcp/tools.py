@@ -565,6 +565,121 @@ def register_tools(server: Server) -> None:
                     "properties": {},
                 },
             ),
+            Tool(
+                name="get_candidate_pool",
+                description=(
+                    "Get filtered tracks in compact format for AI-driven playlist building. "
+                    "Returns minimal metadata (hash, artist, title, BPM, key, energy, "
+                    "danceability, tags, duration) optimized for selection decisions."
+                ),
+                inputSchema={
+                    "type": "object",
+                    "properties": {
+                        "tags": {
+                            "type": "array",
+                            "items": {"type": "string"},
+                            "description": "Filter by genre tags (OR logic)",
+                        },
+                        "bpm_min": {"type": "number", "description": "Minimum BPM"},
+                        "bpm_max": {"type": "number", "description": "Maximum BPM"},
+                        "energy_min": {"type": "number", "description": "Minimum energy (0.0-1.0)"},
+                        "energy_max": {"type": "number", "description": "Maximum energy (0.0-1.0)"},
+                        "key": {
+                            "type": "string",
+                            "description": (
+                                "Camelot key (e.g. '12A'). Returns tracks compatible with "
+                                "this key (same, +/-1, relative major/minor)"
+                            ),
+                        },
+                        "limit": {
+                            "type": "integer",
+                            "default": 50,
+                            "description": "Max tracks returned",
+                        },
+                        "exclude_hashes": {
+                            "type": "array",
+                            "items": {"type": "string"},
+                            "description": "Already-picked track hashes to exclude",
+                        },
+                        "exclude_stems": {
+                            "type": "boolean",
+                            "default": True,
+                            "description": "Auto-filter stems/samples",
+                        },
+                        "exclude_unknown": {
+                            "type": "boolean",
+                            "default": True,
+                            "description": "Auto-filter tracks with artist 'Unknown'",
+                        },
+                        "sort_by": {
+                            "type": "string",
+                            "enum": [
+                                "random",
+                                "bpm_asc",
+                                "bpm_desc",
+                                "energy_desc",
+                                "danceability_desc",
+                            ],
+                            "default": "random",
+                        },
+                    },
+                },
+            ),
+            Tool(
+                name="validate_playlist_order",
+                description=(
+                    "Validate ordered track list for issues (duplicates, BPM jumps, "
+                    "key clashes, tag mismatches). Returns JSON with validation results."
+                ),
+                inputSchema={
+                    "type": "object",
+                    "properties": {
+                        "hashes": {
+                            "type": "array",
+                            "items": {"type": "string"},
+                            "description": "Ordered track hashes representing the playlist",
+                        }
+                    },
+                    "required": ["hashes"],
+                },
+            ),
+            Tool(
+                name="build_playlist",
+                description=(
+                    "Export ordered track list to playlist file. Optionally validates before "
+                    "export. Returns JSON with success status and validation results."
+                ),
+                inputSchema={
+                    "type": "object",
+                    "properties": {
+                        "name": {"type": "string", "description": "Playlist name"},
+                        "hashes": {
+                            "type": "array",
+                            "items": {"type": "string"},
+                            "description": "Ordered track hashes",
+                        },
+                        "output_path": {
+                            "type": "string",
+                            "description": (
+                                "Local machine path (e.g. ~/Desktop/playlist.m3u). If not "
+                                "provided, uses DJ_CATALOG_OUTPUT_PATH env var or defaults "
+                                "to ~/Downloads"
+                            ),
+                        },
+                        "format": {
+                            "type": "string",
+                            "enum": ["m3u", "rekordbox"],
+                            "default": "m3u",
+                        },
+                        "validate": {
+                            "type": "boolean",
+                            "default": True,
+                            "description": "Run validation before export",
+                        },
+                    },
+                    "required": ["name", "hashes"],
+                },
+            ),
         ]
 
     @server.call_tool()  # type: ignore[untyped-decorator]
@@ -591,6 +706,27 @@ def register_tools(server: Server) -> None:
                 return await _scan_library(settings, arguments)
             if name == "clean_orphans":
                 return await _clean_orphans(db, settings)
+            if name == "get_candidate_pool":
+                return [
+                    TextContent(
+                        type="text",
+                        text=await _get_candidate_pool(
+                            db,
+                            tags=arguments.get("tags"),
+                            bpm_min=arguments.get("bpm_min"),
+                            bpm_max=arguments.get("bpm_max"),
+                            energy_min=arguments.get("energy_min"),
+                            reference_key=arguments.get("key"),
+                            exclude_hashes=arguments.get("exclude_hashes", []),
+                            sort_by=arguments.get("sort_by", "random"),
+                            limit=arguments.get("limit", 50),
+                        ),
+                    )
+                ]
+            if name == "validate_playlist_order":
+                return await _validate_playlist_order(db, arguments)
+            if name == "build_playlist":
+                return await _build_playlist(db, arguments)
             return [TextContent(type="text", text=f"Unknown tool: {name}")]
         finally:
             db.close()
