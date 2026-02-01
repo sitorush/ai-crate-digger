@@ -207,6 +207,105 @@ async def _get_candidate_pool(
     return json.dumps(compact_tracks)
 
 
+async def _validate_playlist_order(db: Database, args: dict[str, Any]) -> list[TextContent]:
+    """Validate ordered track list, return issues."""
+    hashes = args["hashes"]
+
+    # Look up tracks (with partial hash support)
+    all_tracks = db.get_all_tracks()
+    tracks = []
+    for h in hashes:
+        found = next((t for t in all_tracks if t.file_hash.startswith(h)), None)
+        if found:
+            tracks.append(found)
+
+    issues = []
+
+    # Check 1: Exact duplicates
+    seen: dict[str, int] = {}
+    duplicates = []
+    for i, h in enumerate(hashes):
+        if h in seen:
+            duplicates.append(
+                {
+                    "hash": h,
+                    "title": tracks[i].title if i < len(tracks) else "unknown",
+                    "positions": [seen[h], i],
+                }
+            )
+        seen[h] = i
+
+    # Check 2: Same-song duplicates (strip parens/brackets, exact match)
+    base_titles: dict[str, int] = {}
+    same_song_dups: dict[str, list[dict[str, Any]]] = {}
+    for i, t in enumerate(tracks):
+        base = _strip_remix_markers(t.title or "")
+        if base in base_titles:
+            if base not in same_song_dups:
+                same_song_dups[base] = [
+                    {
+                        "hash": tracks[base_titles[base]].file_hash,
+                        "title": tracks[base_titles[base]].title,
+                        "position": base_titles[base],
+                    }
+                ]
+            same_song_dups[base].append({"hash": t.file_hash, "title": t.title, "position": i})
+        else:
+            base_titles[base] = i
+
+    # Check 3-5: Adjacent track issues
+    for i in range(len(tracks) - 1):
+        curr, next_t = tracks[i], tracks[i + 1]
+
+        # BPM jump
+        if curr.bpm and next_t.bpm and abs(curr.bpm - next_t.bpm) > 2.0:
+            issues.append(
+                {
+                    "type": "bpm_jump",
+                    "position": i + 1,
+                    "from": _compact_track(curr),
+                    "to": _compact_track(next_t),
+                    "detail": f"BPM change of {abs(curr.bpm - next_t.bpm):.1f} (threshold: 2.0)",
+                }
+            )
+
+        # Key clash
+        dist = harmonic_distance(curr.key_camelot, next_t.key_camelot)
+        if dist > 1:
+            issues.append(
+                {
+                    "type": "key_clash",
+                    "position": i + 1,
+                    "from": _compact_track(curr),
+                    "to": _compact_track(next_t),
+                    "detail": f"Harmonic distance {dist} (max compatible: 1)",
+                }
+            )
+
+        # Tag mismatch (warning only)
+        if not set(curr.tags) & set(next_t.tags):
+            issues.append(
+                {
+                    "type": "tag_mismatch",
+                    "position": i + 1,
+                    "from": _compact_track(curr),
+                    "to": _compact_track(next_t),
+                    "detail": "No shared tags between adjacent tracks",
+                }
+            )
+
+    result = {
+        "valid": len(issues) == 0 and len(duplicates) == 0 and len(same_song_dups) == 0,
+        "track_count": len(tracks),
+        "total_duration_min": sum(t.duration_seconds or 0 for t in tracks) / 60,
+        "issues": issues,
+        "duplicates": duplicates,
+        "same_song_duplicates": [{"base_title": k, "tracks": v} for k, v in same_song_dups.items()],
+    }
+
+    return [TextContent(type="text", text=json.dumps(result, indent=2))]
+
+
 def register_tools(server: Server) -> None:
     """Register all tools with the MCP server."""
 
