@@ -8,14 +8,14 @@
 
 **Solution:** Use parallel workers:
 ```bash
-dj scan ~/Music --workers 4
+crate scan ~/Music --workers 4
 ```
 
 The default uses all CPU cores minus one. For very large libraries, consider scanning without analysis first, then analysing:
 
 ```bash
-dj scan ~/Music --no-analyze  # Fast metadata extraction
-dj scan ~/Music --force       # Then full analysis
+crate scan ~/Music --no-analyze  # Fast metadata extraction
+crate scan ~/Music --force       # Then full analysis
 ```
 
 ### BPM Doesn't Match Rekordbox
@@ -34,7 +34,7 @@ dj scan ~/Music --force       # Then full analysis
 
 **Solution:** Re-scan with force:
 ```bash
-dj scan ~/Music --force
+crate scan ~/Music --force
 ```
 
 ### Search Returns Nothing
@@ -43,7 +43,7 @@ dj scan ~/Music --force
 
 **Note:** Tag search is fuzzy - "garage" matches "UK Garage", "Speed Garage", etc. Check your tags with:
 ```bash
-dj stats --group-by tags
+crate stats --group-by tags
 ```
 
 ### MCP Export Fails with "Errno 2"
@@ -90,9 +90,9 @@ curl -O https://essentia.upf.edu/models/music-style-classification/discogs-effne
 
 **Solution:** Scan in batches by subfolder:
 ```bash
-dj scan ~/Music/House
-dj scan ~/Music/Techno
-dj scan ~/Music/DnB
+crate scan ~/Music/House
+crate scan ~/Music/Techno
+crate scan ~/Music/DnB
 ```
 
 ## Known Quirks
@@ -131,7 +131,7 @@ Gets "UK Garage" as a tag (but not "2024" - years are filtered).
 
 To clean orphaned tracks:
 ```bash
-dj clean
+crate clean
 ```
 
 ### 6. M3U Paths Are Absolute
@@ -146,7 +146,7 @@ Exported Rekordbox XML can be imported into Rekordbox, but ai-crate-digger canno
 
 To start fresh:
 ```bash
-dj reset -y
+crate reset -y
 ```
 
 This deletes the database and vector store. You'll need to re-scan.

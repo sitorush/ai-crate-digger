@@ -15,8 +15,11 @@
 
 ## Step 2: Install ai-crate-digger
 
-1. **Find the folder** you received with these files
-2. **Double-click** the file called **`install.sh`**
+1. **Open Terminal** (Applications → Utilities → Terminal)
+2. **Run this command:**
+   ```
+   curl -fsSL https://raw.githubusercontent.com/sitorush/ai-crate-digger/main/install.sh | bash
+   ```
 3. Wait 5-10 minutes while it installs
 4. When it says "Installation Complete", you're done!
 
