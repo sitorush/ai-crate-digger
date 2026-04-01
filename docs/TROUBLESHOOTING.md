@@ -22,7 +22,7 @@ dj scan ~/Music --force       # Then full analysis
 
 **Problem:** BPM values differ from Rekordbox/Traktor.
 
-**Cause:** Different algorithms. dj-catalog uses Essentia's RhythmExtractor2013 which is optimized for electronic music and should match Rekordbox closely.
+**Cause:** Different algorithms. ai-crate-digger uses Essentia's RhythmExtractor2013 which is optimized for electronic music and should match Rekordbox closely.
 
 **If values still differ:** The track may have tempo changes or unusual time signatures.
 
@@ -39,7 +39,7 @@ dj scan ~/Music --force
 
 ### Search Returns Nothing
 
-**Problem:** `dj search --tags garage` returns 0 results.
+**Problem:** `crate search --tags garage` returns 0 results.
 
 **Note:** Tag search is fuzzy - "garage" matches "UK Garage", "Speed Garage", etc. Check your tags with:
 ```bash
@@ -67,8 +67,8 @@ dj stats --group-by tags
 
 **Solution:** Manually download:
 ```bash
-mkdir -p ~/.dj-catalog/models
-cd ~/.dj-catalog/models
+mkdir -p ~/.ai-crate-digger/models
+cd ~/.ai-crate-digger/models
 curl -O https://essentia.upf.edu/models/music-style-classification/discogs-effnet/discogs-effnet-bs64-1.pb
 curl -O https://essentia.upf.edu/models/music-style-classification/discogs-effnet/discogs-effnet-bs64-1.json
 ```
@@ -81,7 +81,7 @@ curl -O https://essentia.upf.edu/models/music-style-classification/discogs-effne
 
 **Solution:**
 1. Close Claude Desktop (if using MCP)
-2. Kill any running dj-catalog processes
+2. Kill any running ai-crate-digger processes
 3. Retry
 
 ### Memory Issues with Large Libraries
@@ -119,7 +119,7 @@ Audio is resampled to 22050 Hz for analysis (configurable). Lower rates = faster
 
 ### 4. Folder Names Become Tags
 
-dj-catalog extracts folder names as tags. A track in:
+ai-crate-digger extracts folder names as tags. A track in:
 ```
 /Music/UK Garage/2024/track.mp3
 ```
@@ -127,7 +127,7 @@ Gets "UK Garage" as a tag (but not "2024" - years are filtered).
 
 ### 5. Re-scanning Doesn't Delete
 
-`dj scan --force` re-analyzes files but won't remove tracks for deleted files.
+`crate scan --force` re-analyzes files but won't remove tracks for deleted files.
 
 To clean orphaned tracks:
 ```bash
@@ -140,7 +140,7 @@ Exported M3U files contain absolute paths. If you move your music library, the p
 
 ### 7. Rekordbox XML is One-Way
 
-Exported Rekordbox XML can be imported into Rekordbox, but dj-catalog cannot import from Rekordbox.
+Exported Rekordbox XML can be imported into Rekordbox, but ai-crate-digger cannot import from Rekordbox.
 
 ## Reset Everything
 
@@ -154,5 +154,5 @@ This deletes the database and vector store. You'll need to re-scan.
 ## Getting Help
 
 1. Check this troubleshooting guide
-2. Run with verbose logging: `dj scan ~/Music 2>&1 | tee scan.log`
+2. Run with verbose logging: `crate scan ~/Music 2>&1 | tee scan.log`
 3. Open an issue with the log file

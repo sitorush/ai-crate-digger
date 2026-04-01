@@ -21,46 +21,43 @@ sudo apt install python3.11 python3.11-venv ffmpeg
 
 ## Installation Methods
 
-### Method 1: pip install (Recommended for Users)
+### Method 1: pip install (Recommended)
 
 ```bash
 # Create virtual environment
-python3.11 -m venv ~/.local/dj-catalog-venv
+python3.11 -m venv ~/.local/ai-crate-digger-venv
 
 # Activate it
-source ~/.local/dj-catalog-venv/bin/activate  # macOS/Linux
+source ~/.local/ai-crate-digger-venv/bin/activate  # macOS/Linux
 # or
-~\.local\dj-catalog-venv\Scripts\activate     # Windows
+~\.local\ai-crate-digger-venv\Scripts\activate     # Windows
 
-# Install dj-catalog
-pip install dj-catalog
+# Install
+pip install ai-crate-digger
 ```
 
-### Method 2: Install from Source (For Development)
+### Method 2: From Source (Development)
 
 ```bash
-# Clone the repo
-git clone https://github.com/yourusername/dj-catalog.git
-cd dj-catalog
+git clone https://github.com/sitorush/ai-crate-digger.git
+cd ai-crate-digger
 
-# Create virtual environment
-python3.11 -m venv .venv
-source .venv/bin/activate
+# With uv (recommended)
+uv sync
+uv run crate --help
 
-# Install in editable mode with dev dependencies
+# Or with pip
 pip install -e ".[dev]"
-
-# Install pre-commit hooks
 pre-commit install
 ```
 
 ## Verify Installation
 
 ```bash
-dj --version
-# Should output: dj-catalog, version 0.1.0
+crate --version
+# Should output: ai-crate-digger, version 0.1.0
 
-dj --help
+crate --help
 # Shows available commands
 ```
 
@@ -68,29 +65,41 @@ dj --help
 
 ```bash
 # Scan your music folder
-dj scan ~/Music
+crate scan ~/Music
 
 # Check stats
-dj stats
+crate stats
 ```
 
 ## Data Storage
 
-dj-catalog stores data in `~/.dj-catalog/`:
+ai-crate-digger stores data in `~/.ai-crate-digger/`:
 
 | File | Purpose |
 |------|---------|
 | `catalog.db` | SQLite database with track metadata |
-| `vectors/` | ChromaDB vector store for semantic search |
-| `models/` | Downloaded ML models (Essentia) |
+| `.chroma/` | ChromaDB vector store for semantic search |
+| `models/` | Downloaded ML models (Essentia, optional) |
 
 To use a custom location, set environment variables:
 
 ```bash
-export DJ_CATALOG_DB_PATH=~/my-custom-path/catalog.db
-export DJ_CATALOG_VECTOR_PATH=~/my-custom-path/vectors
+export CRATE_DB_PATH=~/my-custom-path/catalog.db
+export CRATE_VECTOR_PATH=~/my-custom-path/vectors
 ```
 
-## Claude Desktop Integration
+## Optional: Essentia (ML Genre Classification)
 
-See [MCP_SETUP.md](./MCP_SETUP.md) for Claude Desktop integration.
+Essentia provides ML-based genre classification for tracks without genre tags. It's a large dependency (~500MB) and optional.
+
+```bash
+pip install essentia-tensorflow
+```
+
+Without Essentia, genre classification falls back to folder name hints and existing ID3 tags.
+
+## Connect to Claude Desktop or ChatGPT
+
+- [Claude Desktop Setup](./MCP_CLAUDE.md)
+- [ChatGPT Desktop Setup](./MCP_CHATGPT.md)
+- [Other LLM Apps](./MCP_GENERIC.md)
