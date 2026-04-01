@@ -80,9 +80,9 @@ def estimate_key(y: np.ndarray, sr: int) -> str | None:
         Key string (e.g., "Am", "C", "F#m") or None if detection fails
     """
     try:
-        # Compute chroma features using STFT (not CQT) -- chroma_cqt uses
-        # numba JIT internally which segfaults on Apple Silicon / macOS 26.
-        chroma = librosa.feature.chroma_stft(y=y, sr=sr)
+        # tuning=0.0 skips librosa's estimate_tuning() call which goes through
+        # piptrack -> localmax -> numba gufunc and segfaults on macOS 26 / M4 Max.
+        chroma = librosa.feature.chroma_stft(y=y, sr=sr, tuning=0.0)
         chroma_avg = np.mean(chroma, axis=1)
 
         # Normalize
