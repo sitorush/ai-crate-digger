@@ -6,7 +6,6 @@ import os
 from collections.abc import Callable, Iterator
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from concurrent.futures.process import BrokenProcessPool
-from pathlib import Path
 
 from ai_crate_digger.analysis.analyzer import analyze_track
 from ai_crate_digger.core.config import get_settings
@@ -45,49 +44,6 @@ def _analyze_single(track: Track) -> Track:
         return track.model_copy(update={"comment": f"Analysis error: {e}"})
 
 
-def _run_pool(
-    tracks: list[Track],
-    max_workers: int,
-    on_progress: Callable[[Track], None] | None,
-) -> tuple[list[Track], set[Path]]:
-    """Run a fresh pool over a list of tracks.
-
-    Returns:
-        (results, completed_paths) -- results may be partial if pool crashed.
-    """
-    mp_context = multiprocessing.get_context("spawn")
-    results: list[Track] = []
-    completed_paths: set[Path] = set()
-
-    try:
-        with ProcessPoolExecutor(
-            max_workers=max_workers,
-            mp_context=mp_context,
-            initializer=_worker_init,
-        ) as pool:
-            futures = {pool.submit(_analyze_single, t): t for t in tracks}
-            for future in as_completed(futures):
-                original = futures[future]
-                try:
-                    analyzed = future.result()
-                except BrokenProcessPool:
-                    # One worker crashed -- exit loop, let caller handle remaining
-                    return results, completed_paths
-                except Exception as e:
-                    logger.error("Worker failed for %s: %s", original.file_path, e)
-                    analyzed = original.model_copy(update={"comment": f"Analysis error: {e}"})
-
-                completed_paths.add(original.file_path)
-                if on_progress:
-                    on_progress(analyzed)
-                results.append(analyzed)
-
-    except Exception:
-        pass
-
-    return results, completed_paths
-
-
 class ParallelAnalyzer:
     """Parallel audio analyzer using process pool."""
 
@@ -109,6 +65,9 @@ class ParallelAnalyzer:
     ) -> Iterator[Track]:
         """Analyze tracks in parallel with automatic crash recovery.
 
+        Yields each track as soon as its worker finishes so callers see
+        real-time progress rather than waiting for the whole batch.
+
         Workers are initialised with BLAS/OpenBLAS thread counts capped at 1
         to prevent segfaults on Apple Silicon.  On BrokenProcessPool the pool
         is restarted for the remaining tracks; the in-flight tracks that caused
@@ -119,40 +78,68 @@ class ParallelAnalyzer:
 
         Args:
             tracks: List of tracks to analyze
-            on_progress: Optional callback for progress updates
+            on_progress: Optional callback called for each completed track
 
         Yields:
-            Analyzed tracks as they complete
+            Analyzed tracks as they complete (streaming, not batched)
         """
         if not tracks:
             return
 
+        max_workers: int = self.max_workers or 1
+
         logger.info(
             "Starting parallel analysis of %d tracks with %d workers",
             len(tracks),
-            self.max_workers,
+            max_workers,
         )
 
         remaining = list(tracks)
         restart_count = 0
-        max_workers: int = self.max_workers or 1
 
         while remaining:
-            results, completed_paths = _run_pool(
-                remaining,
-                max_workers=max_workers,
-                on_progress=on_progress,
-            )
+            completed_paths: set = set()
+            pool_crashed = False
 
-            yield from results
+            mp_context = multiprocessing.get_context("spawn")
+            try:
+                with ProcessPoolExecutor(
+                    max_workers=max_workers,
+                    mp_context=mp_context,
+                    initializer=_worker_init,
+                ) as pool:
+                    futures = {pool.submit(_analyze_single, t): t for t in remaining}
+                    for future in as_completed(futures):
+                        original = futures[future]
+                        try:
+                            analyzed = future.result()
+                        except BrokenProcessPool:
+                            pool_crashed = True
+                            break
+                        except Exception as e:
+                            logger.error("Worker failed for %s: %s", original.file_path, e)
+                            analyzed = original.model_copy(
+                                update={"comment": f"Analysis error: {e}"}
+                            )
+
+                        completed_paths.add(original.file_path)
+                        if on_progress:
+                            on_progress(analyzed)
+                        yield analyzed  # stream immediately, not after full batch
+
+            except Exception:
+                pass
 
             still_remaining = [t for t in remaining if t.file_path not in completed_paths]
 
             if not still_remaining:
-                break  # All done
+                break  # all done
 
-            # Pool crashed -- some tracks were in-flight and lost.
-            # Skip them (they're the likely crash cause) and continue.
+            if not pool_crashed:
+                # Shouldn't happen, but avoid infinite loop
+                break
+
+            # Pool crashed -- skip in-flight tracks (likely crash cause) and restart
             restart_count += 1
             skipped = still_remaining[:max_workers]
             remaining = still_remaining[max_workers:]
