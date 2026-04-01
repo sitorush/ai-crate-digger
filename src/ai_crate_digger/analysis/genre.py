@@ -10,7 +10,7 @@ import numpy as np
 logger = logging.getLogger(__name__)
 
 # Model paths
-MODEL_DIR = Path.home() / ".dj-catalog" / "models"
+MODEL_DIR = Path.home() / ".ai-crate-digger" / "models"
 MODEL_URL = "https://essentia.upf.edu/models/music-style-classification/discogs-effnet/discogs-effnet-bs64-1.pb"
 MODEL_PATH = MODEL_DIR / "discogs-effnet-bs64-1.pb"
 LABELS_URL = "https://essentia.upf.edu/models/music-style-classification/discogs-effnet/discogs-effnet-bs64-1.json"
@@ -51,7 +51,7 @@ def _load_model() -> None:
         _labels = metadata["classes"]
 
     # Import here to avoid slow import at module level
-    from essentia.standard import TensorflowPredictEffnetDiscogs  # type: ignore[import-not-found]
+    from essentia.standard import TensorflowPredictEffnetDiscogs
 
     _model = TensorflowPredictEffnetDiscogs(graphFilename=str(MODEL_PATH))
     logger.info("Essentia genre model loaded with %d labels", len(_labels))

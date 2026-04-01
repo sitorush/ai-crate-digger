@@ -11,8 +11,8 @@ class Settings(BaseSettings):
     """Application settings with environment variable support."""
 
     # Paths
-    db_path: Path = Field(default_factory=lambda: Path.home() / ".dj-catalog" / "catalog.db")
-    vector_path: Path = Field(default_factory=lambda: Path.home() / ".dj-catalog" / ".chroma")
+    db_path: Path = Field(default_factory=lambda: Path.home() / ".ai-crate-digger" / "catalog.db")
+    vector_path: Path = Field(default_factory=lambda: Path.home() / ".ai-crate-digger" / ".chroma")
     output_path: Path = Field(
         default_factory=lambda: Path.home() / "Downloads",
         description="Default directory for exported playlists",
@@ -31,7 +31,7 @@ class Settings(BaseSettings):
     sample_rate: int = 22050  # Hz for librosa
 
     model_config = {
-        "env_prefix": "DJ_CATALOG_",
+        "env_prefix": "CRATE_",
         "env_file": ".env",
     }
 

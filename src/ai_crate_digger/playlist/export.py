@@ -51,7 +51,7 @@ def export_rekordbox_xml(playlist: Playlist, output_path: Path) -> None:
     root = ET.Element("DJ_PLAYLISTS", Version="1.0.0")
 
     # Product info
-    ET.SubElement(root, "PRODUCT", Name="dj-catalog", Version="0.1.0")
+    ET.SubElement(root, "PRODUCT", Name="ai-crate-digger", Version="0.1.0")
 
     # Collection of tracks
     collection = ET.SubElement(root, "COLLECTION", Entries=str(len(playlist.tracks)))

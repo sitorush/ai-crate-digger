@@ -13,9 +13,9 @@ console = Console()
 
 
 @click.group()
-@click.version_option(version="0.1.0", prog_name="dj-catalog")
+@click.version_option(version="0.1.0", prog_name="ai-crate-digger")
 def main() -> None:
-    """DJ Catalog - Music library scanner and playlist generator."""
+    """ai-crate-digger - AI-powered music library scanner and playlist generator."""
     pass
 
 
@@ -52,7 +52,7 @@ def reset(yes: bool) -> None:
         console.print(f"[green]Deleted:[/green] {settings.vector_path}")
 
     console.print("[bold green]Database reset complete![/bold green]")
-    console.print("Run 'dj-catalog scan <directory>' to rebuild.")
+    console.print("Run 'crate scan <directory>' to rebuild.")
 
 
 main.add_command(reset)
@@ -124,7 +124,7 @@ main.add_command(clean)
 
 @click.command("mcp-server")
 def mcp_server() -> None:
-    """Run MCP server for Claude Desktop."""
+    """Run MCP server for Claude Desktop and other LLM apps."""
     from ai_crate_digger.mcp.server import main as mcp_main
 
     mcp_main()

@@ -632,7 +632,7 @@ def register_tools(server: Server) -> None:
                             "type": "string",
                             "description": (
                                 "Directory path to scan. Optional - defaults to "
-                                "DJ_CATALOG_MUSIC_PATH or ~/Music/mp3"
+                                "CRATE_MUSIC_PATH or ~/Music/mp3"
                             ),
                         },
                         "force": {
@@ -755,7 +755,7 @@ def register_tools(server: Server) -> None:
                             "type": "string",
                             "description": (
                                 "Local machine path (e.g. ~/Desktop/playlist.m3u). If not "
-                                "provided, uses DJ_CATALOG_OUTPUT_PATH env var or defaults "
+                                "provided, uses CRATE_OUTPUT_PATH env var or defaults "
                                 "to ~/Downloads"
                             ),
                         },

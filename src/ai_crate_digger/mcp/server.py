@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 def create_server() -> Server:
     """Create and configure MCP server."""
-    server = Server("dj-catalog")
+    server = Server("ai-crate-digger")
     register_tools(server)
     return server
 
