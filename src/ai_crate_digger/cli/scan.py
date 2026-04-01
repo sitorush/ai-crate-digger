@@ -4,7 +4,15 @@ from pathlib import Path
 
 import click
 from rich.console import Console
-from rich.progress import BarColumn, Progress, SpinnerColumn, TaskProgressColumn, TextColumn
+from rich.progress import (
+    BarColumn,
+    MofNCompleteColumn,
+    Progress,
+    SpinnerColumn,
+    TaskProgressColumn,
+    TextColumn,
+    TimeRemainingColumn,
+)
 
 from ai_crate_digger.analysis import ParallelAnalyzer
 from ai_crate_digger.core.config import get_settings
@@ -114,7 +122,8 @@ def scan(directory: Path, analyze: bool, force: bool, reset: bool, workers: int 
             SpinnerColumn(),
             TextColumn("[progress.description]{task.description}"),
             BarColumn(),
-            TaskProgressColumn(),
+            MofNCompleteColumn(),
+            TimeRemainingColumn(),
         ) as progress:
             task = progress.add_task("Analyzing audio...", total=len(tracks))
 
