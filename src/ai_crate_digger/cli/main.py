@@ -1,5 +1,15 @@
 """CLI entry point."""
 
+import os
+
+# Must be set before numpy is imported anywhere in this process.
+# Without this, Accelerate/OpenBLAS/BLAS spawns unlimited threads and segfaults
+# on Apple Silicon (M-series) during audio analysis.
+os.environ.setdefault("VECLIB_MAXIMUM_THREADS", "1")
+os.environ.setdefault("OMP_NUM_THREADS", "1")
+os.environ.setdefault("OPENBLAS_NUM_THREADS", "1")
+os.environ.setdefault("MKL_NUM_THREADS", "1")
+
 import click
 from rich.console import Console
 
