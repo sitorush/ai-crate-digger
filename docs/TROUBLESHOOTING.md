@@ -84,6 +84,19 @@ curl -O https://essentia.upf.edu/models/music-style-classification/discogs-effne
 2. Kill any running ai-crate-digger processes
 3. Retry
 
+### Worker Crashes / "Process pool was terminated abruptly"
+
+**Problem:** Scan shows repeated "Worker failed" errors and tracks get skipped.
+
+**Cause:** A known numpy/BLAS crash on Apple Silicon. Worker processes segfault during audio analysis. ai-crate-digger will automatically fall back to sequential analysis for any remaining tracks, so the scan will complete -- just slower.
+
+**If the fallback is too slow or crashes persist:**
+```bash
+crate scan ~/Music --workers 1
+```
+
+This skips the process pool entirely and analyses tracks one at a time in the main process. Slower, but stable.
+
 ### Memory Issues with Large Libraries
 
 **Problem:** Out of memory when scanning 10,000+ tracks.

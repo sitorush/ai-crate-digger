@@ -147,6 +147,7 @@ crate scan ~/Music                    # Scan with audio analysis (default)
 crate scan ~/Music --no-analyze       # Metadata only (faster)
 crate scan ~/Music --force            # Re-analyse all files
 crate scan ~/Music --workers 4        # Limit parallel workers
+crate scan ~/Music --workers 1        # Sequential -- stable on Apple Silicon if crashes occur
 ```
 
 ### Search
