@@ -29,7 +29,7 @@ def estimate_bpm(y: np.ndarray, sr: int) -> float | None:
         rhythm = RhythmExtractor2013()
         bpm, _, confidence, _, _ = rhythm(y_es)
 
-        if bpm <= 0:
+        if not (40 <= bpm <= 400):
             return None
 
         logger.debug("BPM (essentia): %.1f (confidence: %.2f)", bpm, confidence)
@@ -60,7 +60,7 @@ def estimate_bpm_from_file(file_path: Path) -> float | None:
         rhythm = RhythmExtractor2013()
         bpm, _, confidence, _, _ = rhythm(audio)
 
-        if bpm <= 0:
+        if not (40 <= bpm <= 400):
             return None
 
         logger.debug("BPM for %s: %.1f (confidence: %.2f)", file_path.name, bpm, confidence)
