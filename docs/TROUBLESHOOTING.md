@@ -97,6 +97,13 @@ crate scan ~/Music --workers 1
 
 This skips the process pool entirely and analyses tracks one at a time in the main process. Slower, but stable.
 
+**After a crashed scan, tracks may be in the database but missing BPM/key/energy data.** Re-analyse them with:
+```bash
+crate scan ~/Music --force --workers 1
+```
+
+`--force` re-analyses every track already in the database, not just new ones.
+
 ### Memory Issues with Large Libraries
 
 **Problem:** Out of memory when scanning 10,000+ tracks.
