@@ -80,8 +80,9 @@ def estimate_key(y: np.ndarray, sr: int) -> str | None:
         Key string (e.g., "Am", "C", "F#m") or None if detection fails
     """
     try:
-        # Compute chroma features
-        chroma = librosa.feature.chroma_cqt(y=y, sr=sr)
+        # Compute chroma features using STFT (not CQT) -- chroma_cqt uses
+        # numba JIT internally which segfaults on Apple Silicon / macOS 26.
+        chroma = librosa.feature.chroma_stft(y=y, sr=sr)
         chroma_avg = np.mean(chroma, axis=1)
 
         # Normalize
