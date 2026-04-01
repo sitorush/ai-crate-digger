@@ -48,7 +48,6 @@ def _analyze_single(track: Track) -> Track:
 def _run_pool(
     tracks: list[Track],
     max_workers: int,
-    max_tasks_per_child: int,
     on_progress: Callable[[Track], None] | None,
 ) -> tuple[list[Track], set[Path]]:
     """Run a fresh pool over a list of tracks.
@@ -65,7 +64,6 @@ def _run_pool(
             max_workers=max_workers,
             mp_context=mp_context,
             initializer=_worker_init,
-            max_tasks_per_child=max_tasks_per_child,
         ) as pool:
             futures = {pool.submit(_analyze_single, t): t for t in tracks}
             for future in as_completed(futures):
@@ -111,11 +109,10 @@ class ParallelAnalyzer:
     ) -> Iterator[Track]:
         """Analyze tracks in parallel with automatic crash recovery.
 
-        Uses a pool with max_tasks_per_child=1 so each track gets a fresh
-        subprocess -- accumulated BLAS/numpy state can't carry over between
-        tracks.  On BrokenProcessPool the pool is restarted for remaining
-        tracks.  A track that crashes its worker is skipped so the scan
-        always completes.
+        Workers are initialised with BLAS/OpenBLAS thread counts capped at 1
+        to prevent segfaults on Apple Silicon.  On BrokenProcessPool the pool
+        is restarted for the remaining tracks; the in-flight tracks that caused
+        the crash are skipped so the scan always completes.
 
         Analysis never runs in the main process, so a SIGSEGV only kills the
         worker, not the scan.
@@ -144,9 +141,6 @@ class ParallelAnalyzer:
             results, completed_paths = _run_pool(
                 remaining,
                 max_workers=max_workers,
-                # max_tasks_per_child=1: each track gets a fresh process so
-                # crashes don't contaminate subsequent tracks in the same worker.
-                max_tasks_per_child=1,
                 on_progress=on_progress,
             )
 
