@@ -1,1 +1,1 @@
-"""DJ Catalog test suite."""
+"""ai-crate-digger test suite."""

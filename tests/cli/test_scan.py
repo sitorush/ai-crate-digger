@@ -75,4 +75,4 @@ class TestMainCLI:
         result = runner.invoke(main, ["--help"])
 
         assert result.exit_code == 0
-        assert "DJ Catalog" in result.output
+        assert "ai-crate-digger" in result.output

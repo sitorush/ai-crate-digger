@@ -72,9 +72,8 @@ def classify_genre(
     Returns:
         List of genre strings (simplified, without "Electronic---" prefix)
     """
-    _load_model()
-
     try:
+        _load_model()
         from essentia.standard import MonoLoader
 
         # Load audio at 16kHz (required by model)

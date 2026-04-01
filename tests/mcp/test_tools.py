@@ -10,4 +10,4 @@ class TestMCPServer:
         """Can create MCP server."""
         server = create_server()
         assert server is not None
-        assert server.name == "dj-catalog"
+        assert server.name == "ai-crate-digger"

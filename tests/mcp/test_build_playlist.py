@@ -69,7 +69,7 @@ async def test_build_playlist_default_path(db_with_export_tracks, tmp_path, monk
     """Test export with default path (~/Downloads)."""
     # Mock output_path setting
 
-    monkeypatch.setenv("DJ_CATALOG_OUTPUT_PATH", str(tmp_path))
+    monkeypatch.setenv("CRATE_OUTPUT_PATH", str(tmp_path))
 
     args = {"name": "Test Playlist", "hashes": ["hash001", "hash002"], "validate": False}
     result = await _build_playlist(db_with_export_tracks, args)
