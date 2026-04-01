@@ -6,15 +6,17 @@ ai-crate-digger implements the [Model Context Protocol (MCP)](https://modelconte
 
 Two things in every MCP config:
 
-1. **`command`** — the Python executable in your ai-crate-digger virtual environment
-2. **`args`** — `["-m", "ai_crate_digger.mcp.server"]`
+1. **`command`** — the `crate` binary in your ai-crate-digger virtual environment
+2. **`args`** — `["mcp-server"]`
 
 ```json
 {
-  "command": "/path/to/your/venv/bin/python",
-  "args": ["-m", "ai_crate_digger.mcp.server"]
+  "command": "/path/to/ai-crate-digger/.venv/bin/crate",
+  "args": ["mcp-server"]
 }
 ```
+
+After cloning and running `uv sync`, the binary is at `<repo-dir>/.venv/bin/crate` (macOS/Linux) or `<repo-dir>\.venv\Scripts\crate.exe` (Windows).
 
 ## App-Specific Config Locations
 
@@ -35,20 +37,22 @@ Most apps use this structure under a key like `mcpServers` or `context_servers`:
 {
   "mcpServers": {
     "ai-crate-digger": {
-      "command": "/Users/yourname/.local/ai-crate-digger-venv/bin/python",
-      "args": ["-m", "ai_crate_digger.mcp.server"]
+      "command": "/Users/yourname/ai-crate-digger/.venv/bin/crate",
+      "args": ["mcp-server"]
     }
   }
 }
 ```
+
+Replace `/Users/yourname/ai-crate-digger` with where you cloned the repo.
 
 **Windows path:**
 ```json
 {
   "mcpServers": {
     "ai-crate-digger": {
-      "command": "C:\\Users\\yourname\\.local\\ai-crate-digger-venv\\Scripts\\python.exe",
-      "args": ["-m", "ai_crate_digger.mcp.server"]
+      "command": "C:\\Users\\yourname\\ai-crate-digger\\.venv\\Scripts\\crate.exe",
+      "args": ["mcp-server"]
     }
   }
 }
@@ -60,7 +64,7 @@ Test the server manually before configuring any app:
 
 ```bash
 echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"test","version":"0.1"}}}' \
-  | /path/to/venv/bin/python -m ai_crate_digger.mcp.server
+  | /path/to/ai-crate-digger/.venv/bin/crate mcp-server
 ```
 
 You should see a JSON response with `"result"` containing server capabilities. If you see an error, check the Python path and that the package is installed.

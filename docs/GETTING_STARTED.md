@@ -5,10 +5,12 @@ Get your music library catalogued in 5 minutes.
 ## 1. Install
 
 ```bash
-python3.11 -m venv ~/.local/ai-crate-digger-venv
-source ~/.local/ai-crate-digger-venv/bin/activate
-pip install ai-crate-digger
+git clone https://github.com/sitorush/ai-crate-digger.git
+cd ai-crate-digger
+uv sync
 ```
+
+> **No uv?** `curl -LsSf https://astral.sh/uv/install.sh | sh`
 
 ## 2. Scan Your Music
 

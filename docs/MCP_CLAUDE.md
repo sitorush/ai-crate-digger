@@ -7,16 +7,18 @@ ai-crate-digger includes an MCP (Model Context Protocol) server that lets you co
 ### 1. Install ai-crate-digger
 
 ```bash
-python3.11 -m venv ~/.local/ai-crate-digger-venv
-source ~/.local/ai-crate-digger-venv/bin/activate
-pip install ai-crate-digger
+git clone https://github.com/sitorush/ai-crate-digger.git ~/ai-crate-digger
+cd ~/ai-crate-digger
+uv sync
 ```
 
-### 2. Find your Python path
+> **No uv?** Install it first: `curl -LsSf https://astral.sh/uv/install.sh | sh`
+
+### 2. Find the crate binary path
 
 ```bash
-which python
-# e.g. /Users/yourname/.local/ai-crate-digger-venv/bin/python
+echo "$HOME/ai-crate-digger/.venv/bin/crate"
+# e.g. /Users/yourname/ai-crate-digger/.venv/bin/crate
 ```
 
 ### 3. Configure Claude Desktop
@@ -28,20 +30,22 @@ Edit: `%APPDATA%\Claude\claude_desktop_config.json` (Windows)
 {
   "mcpServers": {
     "ai-crate-digger": {
-      "command": "/Users/yourname/.local/ai-crate-digger-venv/bin/python",
-      "args": ["-m", "ai_crate_digger.mcp.server"]
+      "command": "/Users/yourname/ai-crate-digger/.venv/bin/crate",
+      "args": ["mcp-server"]
     }
   }
 }
 ```
+
+Replace `/Users/yourname/ai-crate-digger` with where you cloned the repo.
 
 **Windows example:**
 ```json
 {
   "mcpServers": {
     "ai-crate-digger": {
-      "command": "C:\\Users\\yourname\\.local\\ai-crate-digger-venv\\Scripts\\python.exe",
-      "args": ["-m", "ai_crate_digger.mcp.server"]
+      "command": "C:\\Users\\yourname\\ai-crate-digger\\.venv\\Scripts\\crate.exe",
+      "args": ["mcp-server"]
     }
   }
 }
@@ -93,8 +97,8 @@ C:\Users\yourname\Desktop\playlist.m3u
 ## Troubleshooting
 
 **"Server disconnected" error**
-1. Verify the Python path is correct
-2. Test it manually: `/path/to/python -c "import ai_crate_digger; print('OK')"`
+1. Verify the binary path: `/path/to/.venv/bin/crate --version`
+2. Test the server manually: `/path/to/.venv/bin/crate mcp-server` (should block with no output — that's correct)
 3. Check Claude Desktop logs: `~/Library/Logs/Claude/` (macOS)
 
 **"Permission denied" on export**

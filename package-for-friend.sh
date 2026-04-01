@@ -1,10 +1,13 @@
 #!/bin/bash
-# Package DJ Catalog for sharing with non-technical friend
+# Package ai-crate-digger for sharing with non-technical friend
+# NOTE: This script is for sharing the source directory directly.
+# For most users, just share the GitHub URL instead:
+# https://github.com/sitorush/ai-crate-digger
 
-echo "📦 Packaging DJ Catalog for sharing..."
+echo "📦 Packaging ai-crate-digger for sharing..."
 
 # Create clean package
-PACKAGE_NAME="DJ-Catalog-Easy-Install"
+PACKAGE_NAME="ai-crate-digger-easy-install"
 rm -rf "/tmp/$PACKAGE_NAME" "/tmp/$PACKAGE_NAME.zip"
 mkdir -p "/tmp/$PACKAGE_NAME"
 
@@ -43,10 +46,10 @@ echo "   • WeTransfer"
 echo ""
 echo "Instructions for your friend:"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "1. Unzip DJ-Catalog-Easy-Install.zip"
+echo "1. Unzip ai-crate-digger-easy-install.zip"
 echo "2. Open the folder and read START_HERE.md"
 echo "3. Double-click install.sh"
 echo "4. Wait 5-10 minutes"
-echo "5. Look for 'DJ Catalog' on Desktop"
+echo "5. Look for 'ai-crate-digger' on Desktop"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""

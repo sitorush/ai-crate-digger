@@ -1,4 +1,4 @@
-# 🎵 DJ Catalog - Installation Instructions
+# ai-crate-digger - Installation Instructions
 
 **For Mac Users (No Technical Knowledge Required)**
 
@@ -9,22 +9,22 @@
 1. Go to: **https://www.python.org/downloads/**
 2. Click the big yellow button **"Download Python 3.11"**
 3. Open the downloaded file and follow the installer
-4. ✅ Done! You never need to do this again
+4. Done! You never need to do this again
 
 ---
 
-## Step 2: Install DJ Catalog
+## Step 2: Install ai-crate-digger
 
 1. **Find the folder** you received with these files
 2. **Double-click** the file called **`install.sh`**
 3. Wait 5-10 minutes while it installs
-4. ✅ When it says "Installation Complete", you're done!
+4. When it says "Installation Complete", you're done!
 
 ---
 
-## Step 3: Use DJ Catalog
+## Step 3: Use ai-crate-digger
 
-Look on your **Desktop** for an icon called **"DJ Catalog"**
+Look on your **Desktop** for an icon called **"ai-crate-digger"**
 
 **Double-click it** to open the app!
 
@@ -42,12 +42,12 @@ You'll see a simple menu:
 
 ## First Time Use
 
-1. **Launch "DJ Catalog"** from your Desktop
+1. **Launch "ai-crate-digger"** from your Desktop
 2. Choose **option 1** (Scan Music Library)
 3. **Drag your music folder** into the window (or type the path)
    - Example: `/Users/YourName/Music`
 4. Wait while it scans (could be 10-30 minutes for large libraries)
-5. ✅ Done! Now you can search and create playlists
+5. Done! Now you can search and create playlists
 
 ---
 
@@ -76,22 +76,19 @@ You'll see a simple menu:
 → Right-click `install.sh` → Open With → Terminal
 
 **App won't open**
-→ Right-click "DJ Catalog" → Open (first time only)
-
-**Need help?**
-→ Text me! 📱
+→ Right-click "ai-crate-digger" → Open (first time only)
 
 ---
 
 ## What This App Does
 
 - **Scans** your music collection (MP3, FLAC, WAV, etc.)
-- **Analyzes** BPM, musical key, energy levels
+- **Analyses** BPM, musical key, energy levels
 - **Searches** by any criteria (genre, BPM, key, artist, mood)
 - **Generates playlists** with harmonic mixing (songs that flow well together)
 - **Exports** to formats DJs use (M3U, Rekordbox XML)
 
-Perfect for organizing your music and creating DJ sets!
+Perfect for organising your music and creating DJ sets!
 
 ---
 
@@ -100,10 +97,10 @@ Perfect for organizing your music and creating DJ sets!
 If you want to use the command-line version:
 
 1. Open **Terminal** (in Applications/Utilities)
-2. Type: `source ~/DJ-Catalog/venv/bin/activate`
+2. Type: `source ~/ai-crate-digger/venv/bin/activate`
 3. Now you can use commands like:
-   - `dj scan ~/Music`
-   - `dj search --tags techno --bpm-min 125`
-   - `dj playlist --tags house --duration 60`
+   - `crate scan ~/Music`
+   - `crate search --tags techno --bpm-min 125`
+   - `crate playlist --tags house --duration 60`
 
-But the Desktop app does everything for you! ✨
+But the Desktop app does everything for you!

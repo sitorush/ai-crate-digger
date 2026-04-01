@@ -2,7 +2,7 @@
 
 ## Overview
 
-The DJ Catalog MCP server provides tools for music library management and playlist generation. Tools are divided into two categories:
+The ai-crate-digger MCP server provides tools for music library management and playlist generation. Tools are divided into two categories:
 
 1. **Traditional tools** - Direct playlist generation via greedy algorithm
 2. **AI-friendly tools** - Enable AI-driven playlist building with creative control
@@ -130,7 +130,7 @@ Exports ordered track list to playlist file.
 
 **Path handling:**
 - User path provided: Validates and uses it
-- No path provided: Uses `DJ_CATALOG_OUTPUT_PATH` env var or `~/Downloads`
+- No path provided: Uses `CRATE_OUTPUT_PATH` env var or `~/Downloads`
 - Cross-OS compatible (`Path.home()`)
 
 **Format detection:**
@@ -160,13 +160,13 @@ Export tracks to playlist file (existing tool, unchanged).
 
 ```bash
 # Default output directory for playlists
-export DJ_CATALOG_OUTPUT_PATH=~/Music/Playlists
+export CRATE_OUTPUT_PATH=~/Music/Playlists
 
 # Database path
-export DJ_CATALOG_DB_PATH=~/.dj-catalog/catalog.db
+export CRATE_DB_PATH=~/.ai-crate-digger/catalog.db
 
 # Vector store path
-export DJ_CATALOG_VECTOR_PATH=~/.dj-catalog/.chroma
+export CRATE_VECTOR_PATH=~/.ai-crate-digger/.chroma
 ```
 
 ## Example Workflows

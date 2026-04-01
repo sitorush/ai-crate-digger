@@ -19,36 +19,23 @@ brew install python@3.11 ffmpeg
 sudo apt install python3.11 python3.11-venv ffmpeg
 ```
 
-## Installation Methods
-
-### Method 1: pip install (Recommended)
-
-```bash
-# Create virtual environment
-python3.11 -m venv ~/.local/ai-crate-digger-venv
-
-# Activate it
-source ~/.local/ai-crate-digger-venv/bin/activate  # macOS/Linux
-# or
-~\.local\ai-crate-digger-venv\Scripts\activate     # Windows
-
-# Install
-pip install ai-crate-digger
-```
-
-### Method 2: From Source (Development)
+## Installation
 
 ```bash
 git clone https://github.com/sitorush/ai-crate-digger.git
 cd ai-crate-digger
-
-# With uv (recommended)
 uv sync
-uv run crate --help
+```
 
-# Or with pip
-pip install -e ".[dev]"
-pre-commit install
+> **No uv?** Install it first: `curl -LsSf https://astral.sh/uv/install.sh | sh`
+
+### Development install (with pre-commit hooks)
+
+```bash
+git clone https://github.com/sitorush/ai-crate-digger.git
+cd ai-crate-digger
+uv sync
+uv run pre-commit install
 ```
 
 ## Verify Installation
@@ -93,7 +80,15 @@ export CRATE_VECTOR_PATH=~/my-custom-path/vectors
 Essentia provides ML-based genre classification for tracks without genre tags. It's a large dependency (~500MB) and optional.
 
 ```bash
+# Requires TensorFlow — install TF first if you don't have it
+pip install tensorflow
 pip install essentia-tensorflow
+```
+
+If you don't want TensorFlow, there's a lighter CPU-only build:
+
+```bash
+pip install essentia
 ```
 
 Without Essentia, genre classification falls back to folder name hints and existing ID3 tags.

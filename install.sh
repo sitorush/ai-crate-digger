@@ -1,12 +1,11 @@
 #!/bin/bash
-# DJ Catalog - One-Click Installer
-# Double-click this file to install
+# ai-crate-digger - One-Click Installer
 
 set -e
 
 echo "╔════════════════════════════════════════╗"
-echo "║   DJ Catalog - Easy Installer         ║"
-echo "╔════════════════════════════════════════╗"
+echo "║   ai-crate-digger - Easy Installer    ║"
+echo "╚════════════════════════════════════════╝"
 echo ""
 
 # Check Python version
@@ -24,7 +23,7 @@ echo "✓ Python 3.11 found"
 echo ""
 
 # Install location
-INSTALL_DIR="$HOME/DJ-Catalog"
+INSTALL_DIR="$HOME/ai-crate-digger"
 echo "Installing to: $INSTALL_DIR"
 echo ""
 
@@ -49,16 +48,16 @@ pip install -e . > /dev/null 2>&1
 
 # Create launcher script
 echo "🚀 Creating launcher..."
-cat > "$HOME/Desktop/DJ Catalog.command" << 'LAUNCHER'
+cat > "$HOME/Desktop/ai-crate-digger.command" << 'LAUNCHER'
 #!/bin/bash
-cd "$HOME/DJ-Catalog"
+cd "$HOME/ai-crate-digger"
 source venv/bin/activate
 
 # Simple menu
 while true; do
     clear
     echo "╔════════════════════════════════════════╗"
-    echo "║         DJ Catalog                     ║"
+    echo "║         ai-crate-digger                ║"
     echo "╚════════════════════════════════════════╝"
     echo ""
     echo "1. Scan Music Library"
@@ -74,13 +73,13 @@ while true; do
             echo ""
             read -p "Enter music folder path (or drag folder here): " music_path
             music_path="${music_path// /\\ }"  # Handle spaces
-            dj scan "$music_path"
+            crate scan "$music_path"
             read -p "Press Enter to continue..."
             ;;
         2)
             echo ""
             read -p "Search for (e.g., 'techno', 'artist:deadmau5'): " query
-            dj search "$query"
+            crate search "$query"
             read -p "Press Enter to continue..."
             ;;
         3)
@@ -88,12 +87,12 @@ while true; do
             read -p "Genre/tags (e.g., 'techno house'): " tags
             read -p "Duration in minutes (e.g., 60): " duration
             read -p "Output file (e.g., ~/Desktop/playlist.m3u): " output
-            dj playlist --tags "$tags" --duration "$duration" -o "$output"
+            crate playlist --tags "$tags" --duration "$duration" -o "$output"
             echo "✓ Playlist saved to: $output"
             read -p "Press Enter to continue..."
             ;;
         4)
-            dj stats
+            crate stats
             read -p "Press Enter to continue..."
             ;;
         5)
@@ -108,16 +107,16 @@ while true; do
 done
 LAUNCHER
 
-chmod +x "$HOME/Desktop/DJ Catalog.command"
+chmod +x "$HOME/Desktop/ai-crate-digger.command"
 
 echo ""
 echo "✅ Installation Complete!"
 echo ""
 echo "╔════════════════════════════════════════╗"
-echo "║  🎵 DJ Catalog is ready to use!       ║"
+echo "║  🎵 ai-crate-digger is ready to use! ║"
 echo "╚════════════════════════════════════════╝"
 echo ""
-echo "Look for 'DJ Catalog' icon on your Desktop"
+echo "Look for 'ai-crate-digger' icon on your Desktop"
 echo "Double-click it to start!"
 echo ""
 read -p "Press Enter to finish..."

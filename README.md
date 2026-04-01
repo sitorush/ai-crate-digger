@@ -56,18 +56,12 @@ Analysis runs in parallel across all CPU cores. A library of 6,000+ tracks takes
 ## Installation
 
 ```bash
-python3.11 -m venv ~/.local/ai-crate-digger-venv
-source ~/.local/ai-crate-digger-venv/bin/activate
-pip install ai-crate-digger
-```
-
-From source:
-
-```bash
 git clone https://github.com/sitorush/ai-crate-digger.git
 cd ai-crate-digger
 uv sync
 ```
+
+> **No uv?** Install it first: `curl -LsSf https://astral.sh/uv/install.sh | sh`
 
 See [Installation Guide](docs/INSTALLATION.md) for platform-specific instructions and optional Essentia setup.
 
@@ -100,12 +94,14 @@ Ask your AI assistant to manage your music library in plain English.
 {
   "mcpServers": {
     "ai-crate-digger": {
-      "command": "/Users/yourname/.local/ai-crate-digger-venv/bin/python",
-      "args": ["-m", "ai_crate_digger.mcp.server"]
+      "command": "/Users/yourname/ai-crate-digger/.venv/bin/crate",
+      "args": ["mcp-server"]
     }
   }
 }
 ```
+
+Replace `/Users/yourname/ai-crate-digger` with the path where you cloned the repo.
 
 Config file: `~/Library/Application Support/Claude/claude_desktop_config.json`
 

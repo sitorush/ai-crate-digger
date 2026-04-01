@@ -9,16 +9,18 @@ ai-crate-digger works with the ChatGPT desktop app via the Model Context Protoco
 ### 1. Install ai-crate-digger
 
 ```bash
-python3.11 -m venv ~/.local/ai-crate-digger-venv
-source ~/.local/ai-crate-digger-venv/bin/activate
-pip install ai-crate-digger
+git clone https://github.com/sitorush/ai-crate-digger.git ~/ai-crate-digger
+cd ~/ai-crate-digger
+uv sync
 ```
 
-### 2. Find your Python path
+> **No uv?** Install it first: `curl -LsSf https://astral.sh/uv/install.sh | sh`
+
+### 2. Find the crate binary path
 
 ```bash
-which python
-# e.g. /Users/yourname/.local/ai-crate-digger-venv/bin/python
+echo "$HOME/ai-crate-digger/.venv/bin/crate"
+# e.g. /Users/yourname/ai-crate-digger/.venv/bin/crate
 ```
 
 ### 3. Configure ChatGPT Desktop
@@ -37,20 +39,22 @@ Add the following (create the file if it doesn't exist):
 {
   "mcpServers": {
     "ai-crate-digger": {
-      "command": "/Users/yourname/.local/ai-crate-digger-venv/bin/python",
-      "args": ["-m", "ai_crate_digger.mcp.server"]
+      "command": "/Users/yourname/ai-crate-digger/.venv/bin/crate",
+      "args": ["mcp-server"]
     }
   }
 }
 ```
+
+Replace `/Users/yourname/ai-crate-digger` with where you cloned the repo.
 
 **Windows example:**
 ```json
 {
   "mcpServers": {
     "ai-crate-digger": {
-      "command": "C:\\Users\\yourname\\.local\\ai-crate-digger-venv\\Scripts\\python.exe",
-      "args": ["-m", "ai_crate_digger.mcp.server"]
+      "command": "C:\\Users\\yourname\\ai-crate-digger\\.venv\\Scripts\\crate.exe",
+      "args": ["mcp-server"]
     }
   }
 }
@@ -81,7 +85,7 @@ The MCP server and all tools are identical — only where you put the config dif
 ## Troubleshooting
 
 **Tools not appearing**
-1. Verify the Python path: `/path/to/python -c "import ai_crate_digger; print('OK')"`
+1. Verify the binary path: `/path/to/.venv/bin/crate --version`
 2. Check the JSON is valid (no trailing commas, correct quote style)
 3. Restart ChatGPT Desktop after any config change
 
