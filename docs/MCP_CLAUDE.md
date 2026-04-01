@@ -67,7 +67,7 @@ Quit and reopen. You should see "ai-crate-digger" in the MCP servers list (hamme
 | `get_stats` | Library statistics |
 | `get_track_details` | Full metadata for a specific track |
 | `export_playlist` | Export to M3U or Rekordbox XML |
-| `scan_library` | Scan a directory for new tracks |
+| `scan_library` | Scan a small folder for new tracks (new additions only -- see note below) |
 | `reset_database` | Clear all tracks (with confirmation) |
 | `clean_orphans` | Remove tracks for deleted files |
 
@@ -78,6 +78,20 @@ Quit and reopen. You should see "ai-crate-digger" in the MCP servers list (hamme
 - "What's the most common key in my library?"
 - "Find me 10 tracks that would mix well after Amelie Lens - Exhale"
 - "Make a 90-minute gym playlist that builds from 124 to 132 BPM"
+
+## Scanning: CLI for Full Library, Claude for New Additions
+
+`scan_library` is designed for small, incremental scans -- e.g. a folder of tracks you just downloaded. It runs synchronously inside the MCP server, so scanning thousands of tracks will time out or hang Claude Desktop.
+
+**Full library scan (first time or re-scan):** always use the CLI:
+```bash
+crate scan ~/Music              # first scan
+crate scan ~/Music --force      # re-analyse everything
+```
+
+**New additions via Claude Desktop:** once your library is in the database, you can ask Claude to pick up new tracks:
+> "Scan my Downloads folder for new tracks"
+> "Add the tracks in ~/Music/New Arrivals to my library"
 
 ## Important: File Paths
 

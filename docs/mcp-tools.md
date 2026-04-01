@@ -140,6 +140,25 @@ Exports ordered track list to playlist file.
 
 ## Traditional Tools
 
+### scan_library
+
+Scans a directory for new audio files, extracts metadata, and runs audio analysis.
+
+> **Use for new additions only.** This tool runs synchronously inside the MCP server. Scanning a full library of thousands of tracks will time out or hang your AI assistant. For first-time or full library scans, use the CLI:
+> ```bash
+> crate scan ~/Music
+> crate scan ~/Music --force   # re-analyse everything
+> ```
+> Use `scan_library` via your AI assistant for small folders of new tracks -- e.g. a Downloads folder or a fresh batch of purchases.
+
+**Input Schema:**
+```json
+{
+  "directory": "~/Music/New Arrivals",
+  "force": false
+}
+```
+
 ### generate_playlist
 
 Generates playlist using greedy algorithm (existing tool, unchanged).
