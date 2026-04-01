@@ -1,4 +1,4 @@
-"""BPM (tempo) detection using Essentia with librosa fallback."""
+"""BPM (tempo) detection using Essentia."""
 
 import logging
 from pathlib import Path
@@ -9,24 +9,23 @@ logger = logging.getLogger(__name__)
 
 
 def estimate_bpm(y: np.ndarray, sr: int) -> float | None:
-    """Estimate tempo (BPM) from audio signal.
+    """Estimate tempo (BPM) from a pre-loaded audio array.
 
-    Tries Essentia's RhythmExtractor2013 first (more accurate for
-    electronic/dance music), falls back to librosa's beat_track.
+    NOTE: Prefer estimate_bpm_from_file when you have a file path -- it loads
+    at 44100 Hz which is what RhythmExtractor2013 requires.  Passing a 22050 Hz
+    array here will silently reduce accuracy.
 
     Args:
-        y: Audio time series (mono)
+        y: Audio time series (mono, float32)
         sr: Sample rate
 
     Returns:
         Estimated BPM rounded to 1 decimal, or None if detection fails
     """
-    # Try Essentia first
     try:
         from essentia.standard import RhythmExtractor2013
 
         y_es = y.astype(np.float32) if y.dtype != np.float32 else y
-
         rhythm = RhythmExtractor2013()
         bpm, _, confidence, _, _ = rhythm(y_es)
 
@@ -36,26 +35,8 @@ def estimate_bpm(y: np.ndarray, sr: int) -> float | None:
         logger.debug("BPM (essentia): %.1f (confidence: %.2f)", bpm, confidence)
         return round(float(bpm), 1)
 
-    except ImportError:
-        logger.debug("Essentia not available, falling back to librosa")
     except Exception as e:
         logger.warning("Essentia BPM estimation failed: %s", e)
-
-    # Fallback to librosa
-    try:
-        import librosa
-
-        tempo, _ = librosa.beat.beat_track(y=y, sr=sr)
-        bpm = float(np.atleast_1d(tempo)[0])
-
-        if bpm <= 0:
-            return None
-
-        logger.debug("BPM (librosa): %.1f", bpm)
-        return round(bpm, 1)
-
-    except Exception as e:
-        logger.warning("BPM estimation failed: %s", e)
         return None
 
 

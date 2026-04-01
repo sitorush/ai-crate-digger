@@ -5,7 +5,7 @@ from datetime import UTC, datetime
 
 import librosa
 
-from ai_crate_digger.analysis.bpm import estimate_bpm
+from ai_crate_digger.analysis.bpm import estimate_bpm_from_file
 from ai_crate_digger.analysis.energy import compute_danceability, compute_energy
 from ai_crate_digger.analysis.genre import classify_genre, extract_folder_hint
 from ai_crate_digger.analysis.key import estimate_key, key_to_camelot
@@ -37,7 +37,11 @@ def analyze_track(track: Track, skip_genre: bool = False) -> Track:
     sr = int(sr)  # librosa.load returns int | float, ensure int
 
     # Run analysis
-    bpm = estimate_bpm(y, sr)
+    # estimate_bpm_from_file uses Essentia's MonoLoader at 44100 Hz which is
+    # what RhythmExtractor2013 requires. The pre-loaded array (y) is at
+    # settings.sample_rate (22050 Hz by default) which causes Essentia to fail
+    # and fall through to the librosa/numba path that crashes on Apple Silicon.
+    bpm = estimate_bpm_from_file(track.file_path)
     key = estimate_key(y, sr)
     energy = compute_energy(y)
     danceability = compute_danceability(y, sr, bpm)

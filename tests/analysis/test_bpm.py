@@ -1,8 +1,14 @@
 """Tests for BPM detection."""
 
+import importlib
+
 import numpy as np
+import pytest
 
 from ai_crate_digger.analysis.bpm import estimate_bpm
+
+essentia_available = importlib.util.find_spec("essentia") is not None
+requires_essentia = pytest.mark.skipif(not essentia_available, reason="Essentia not installed")
 
 
 def _create_click_track(sr: int, duration: float, bpm: float) -> np.ndarray:
@@ -37,6 +43,7 @@ def _create_click_track(sr: int, duration: float, bpm: float) -> np.ndarray:
 class TestBPM:
     """Tests for BPM estimation."""
 
+    @requires_essentia
     def test_estimate_bpm_returns_float(self) -> None:
         """BPM estimation returns float."""
         sr = 22050
@@ -48,6 +55,7 @@ class TestBPM:
         assert bpm is not None
         assert isinstance(bpm, float)
 
+    @requires_essentia
     def test_estimate_bpm_reasonable_range(self) -> None:
         """BPM is in reasonable range (60-200)."""
         sr = 22050
