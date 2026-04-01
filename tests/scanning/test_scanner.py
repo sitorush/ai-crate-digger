@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from dj_catalog.scanning.scanner import SUPPORTED_EXTENSIONS, scan_directory
+from ai_crate_digger.scanning.scanner import SUPPORTED_EXTENSIONS, scan_directory
 
 
 class TestScanner:

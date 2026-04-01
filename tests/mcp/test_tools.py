@@ -1,6 +1,6 @@
 """Tests for MCP tools."""
 
-from dj_catalog.mcp.server import create_server
+from ai_crate_digger.mcp.server import create_server
 
 
 class TestMCPServer:

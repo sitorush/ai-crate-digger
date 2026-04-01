@@ -3,7 +3,7 @@
 import pytest
 from click.testing import CliRunner
 
-from dj_catalog.cli.main import main
+from ai_crate_digger.cli.main import main
 
 
 @pytest.fixture

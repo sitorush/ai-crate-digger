@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from dj_catalog.scanning.hasher import compute_file_hash
+from ai_crate_digger.scanning.hasher import compute_file_hash
 
 
 class TestHasher:

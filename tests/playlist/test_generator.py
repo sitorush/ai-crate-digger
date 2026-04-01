@@ -4,9 +4,9 @@ from pathlib import Path
 
 import pytest
 
-from dj_catalog.core.models import Track
-from dj_catalog.playlist.filters import TrackFilter
-from dj_catalog.playlist.generator import Playlist, PlaylistOptions, generate_playlist
+from ai_crate_digger.core.models import Track
+from ai_crate_digger.playlist.filters import TrackFilter
+from ai_crate_digger.playlist.generator import Playlist, PlaylistOptions, generate_playlist
 
 
 @pytest.fixture

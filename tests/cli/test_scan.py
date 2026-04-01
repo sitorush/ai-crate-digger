@@ -6,7 +6,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 from click.testing import CliRunner
 
-from dj_catalog.cli.main import main
+from ai_crate_digger.cli.main import main
 
 
 @pytest.fixture
@@ -38,9 +38,9 @@ class TestScanCommand:
 
         assert result.exit_code != 0
 
-    @patch("dj_catalog.cli.scan.Database")
-    @patch("dj_catalog.cli.scan.VectorStore")
-    @patch("dj_catalog.cli.scan.scan_directory")
+    @patch("ai_crate_digger.cli.scan.Database")
+    @patch("ai_crate_digger.cli.scan.VectorStore")
+    @patch("ai_crate_digger.cli.scan.scan_directory")
     def test_scan_empty_directory(
         self,
         mock_scan: MagicMock,

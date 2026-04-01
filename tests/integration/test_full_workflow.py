@@ -6,16 +6,16 @@ from pathlib import Path
 
 import pytest
 
-from dj_catalog.analysis import analyze_track
-from dj_catalog.core.models import Track
-from dj_catalog.playlist import (
+from ai_crate_digger.analysis import analyze_track
+from ai_crate_digger.core.models import Track
+from ai_crate_digger.playlist import (
     PlaylistOptions,
     TrackFilter,
     export_playlist,
     generate_playlist,
 )
-from dj_catalog.scanning import compute_file_hash, extract_metadata, scan_directory
-from dj_catalog.storage import Database, VectorStore
+from ai_crate_digger.scanning import compute_file_hash, extract_metadata, scan_directory
+from ai_crate_digger.storage import Database, VectorStore
 
 
 @pytest.fixture

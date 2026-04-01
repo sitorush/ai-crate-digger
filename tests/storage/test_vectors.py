@@ -4,8 +4,8 @@ from pathlib import Path
 
 import pytest
 
-from dj_catalog.core.models import Track
-from dj_catalog.storage.vectors import VectorStore
+from ai_crate_digger.core.models import Track
+from ai_crate_digger.storage.vectors import VectorStore
 
 
 @pytest.fixture

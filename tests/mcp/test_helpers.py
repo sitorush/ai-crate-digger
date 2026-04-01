@@ -1,7 +1,7 @@
 """Test helper functions for AI playlist tools."""
 
-from dj_catalog.core.models import Track
-from dj_catalog.mcp.tools import _compact_track, _sort_candidates, _strip_remix_markers
+from ai_crate_digger.core.models import Track
+from ai_crate_digger.mcp.tools import _compact_track, _sort_candidates, _strip_remix_markers
 
 
 def test_strip_remix_markers():

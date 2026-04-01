@@ -1,6 +1,6 @@
 """Tests for harmonic mixing."""
 
-from dj_catalog.playlist.harmonic import (
+from ai_crate_digger.playlist.harmonic import (
     camelot_to_standard,
     get_compatible_keys,
     harmonic_distance,

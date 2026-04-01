@@ -2,7 +2,7 @@
 
 import numpy as np
 
-from dj_catalog.analysis.bpm import estimate_bpm
+from ai_crate_digger.analysis.bpm import estimate_bpm
 
 
 def _create_click_track(sr: int, duration: float, bpm: float) -> np.ndarray:

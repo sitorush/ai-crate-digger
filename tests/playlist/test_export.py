@@ -4,9 +4,9 @@ from pathlib import Path
 
 import pytest
 
-from dj_catalog.core.models import Track
-from dj_catalog.playlist.export import export_m3u, export_playlist, export_rekordbox_xml
-from dj_catalog.playlist.generator import Playlist
+from ai_crate_digger.core.models import Track
+from ai_crate_digger.playlist.export import export_m3u, export_playlist, export_rekordbox_xml
+from ai_crate_digger.playlist.generator import Playlist
 
 
 @pytest.fixture

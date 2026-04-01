@@ -41,7 +41,7 @@ def sample_wav(tmp_dir: Path) -> Path:
 @pytest.fixture
 def sample_track():
     """Create a sample track for testing."""
-    from dj_catalog.core.models import Track
+    from ai_crate_digger.core.models import Track
 
     return Track(
         file_path=Path("/music/test.mp3"),

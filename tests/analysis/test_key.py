@@ -2,7 +2,7 @@
 
 import numpy as np
 
-from dj_catalog.analysis.key import CAMELOT_WHEEL, estimate_key, key_to_camelot
+from ai_crate_digger.analysis.key import CAMELOT_WHEEL, estimate_key, key_to_camelot
 
 
 class TestKey:

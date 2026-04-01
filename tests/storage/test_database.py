@@ -4,8 +4,8 @@ from pathlib import Path
 
 import pytest
 
-from dj_catalog.core.models import Track
-from dj_catalog.storage.database import Database
+from ai_crate_digger.core.models import Track
+from ai_crate_digger.storage.database import Database
 
 
 @pytest.fixture

@@ -4,9 +4,9 @@ from pathlib import Path
 
 import pytest
 
-from dj_catalog.core.exceptions import ExtractionError
-from dj_catalog.core.models import Track
-from dj_catalog.scanning.extractor import (
+from ai_crate_digger.core.exceptions import ExtractionError
+from ai_crate_digger.core.models import Track
+from ai_crate_digger.scanning.extractor import (
     _parse_remixer,
     _safe_date,
     _safe_int,

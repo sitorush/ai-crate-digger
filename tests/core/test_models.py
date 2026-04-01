@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from dj_catalog.core.models import Track
+from ai_crate_digger.core.models import Track
 
 
 class TestTrack:

@@ -2,7 +2,7 @@
 
 import numpy as np
 
-from dj_catalog.analysis.energy import compute_danceability, compute_energy
+from ai_crate_digger.analysis.energy import compute_danceability, compute_energy
 
 
 class TestEnergy:

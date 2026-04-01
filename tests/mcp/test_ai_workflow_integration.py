@@ -5,9 +5,9 @@ from pathlib import Path
 
 import pytest
 
-from dj_catalog.core.models import Track
-from dj_catalog.mcp.tools import _build_playlist, _get_candidate_pool, _validate_playlist_order
-from dj_catalog.storage import Database
+from ai_crate_digger.core.models import Track
+from ai_crate_digger.mcp.tools import _build_playlist, _get_candidate_pool, _validate_playlist_order
+from ai_crate_digger.storage import Database
 
 
 @pytest.fixture

@@ -2,8 +2,8 @@
 
 from pathlib import Path
 
-from dj_catalog.analysis.analyzer import analyze_track
-from dj_catalog.core.models import Track
+from ai_crate_digger.analysis.analyzer import analyze_track
+from ai_crate_digger.core.models import Track
 
 
 class TestAnalyzer:

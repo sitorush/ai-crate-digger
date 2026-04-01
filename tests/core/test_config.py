@@ -2,7 +2,7 @@
 
 from pathlib import Path
 
-from dj_catalog.core.config import Settings, get_settings
+from ai_crate_digger.core.config import Settings, get_settings
 
 
 class TestSettings:
