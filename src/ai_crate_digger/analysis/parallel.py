@@ -23,6 +23,13 @@ def _worker_init() -> None:
     Accelerate / OpenBLAS / BLAS can segfault on Apple Silicon when multiple
     workers run concurrently.
     """
+    import faulthandler
+    import sys
+
+    # Dump Python traceback to stderr on SIGSEGV/SIGFPE/SIGABRT so we can
+    # see exactly which library call is crashing rather than just "segfault".
+    faulthandler.enable(file=sys.stderr)
+
     os.environ.setdefault("VECLIB_MAXIMUM_THREADS", "1")
     os.environ.setdefault("OMP_NUM_THREADS", "1")
     os.environ.setdefault("OPENBLAS_NUM_THREADS", "1")
