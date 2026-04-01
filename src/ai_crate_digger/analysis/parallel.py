@@ -58,7 +58,12 @@ class ParallelAnalyzer:
         tracks: list[Track],
         on_progress: Callable[[Track], None] | None = None,
     ) -> Iterator[Track]:
-        """Analyze tracks in parallel, falling back to sequential if workers crash.
+        """Analyze tracks in parallel, falling back to single-subprocess mode if workers crash.
+
+        Analysis always runs in a subprocess -- never in the main process -- so
+        a SIGSEGV in numpy/BLAS kills the worker, not the scan.  The main
+        process catches BrokenProcessPool, skips the crashed track, and
+        continues.
 
         Args:
             tracks: List of tracks to analyze
@@ -119,24 +124,60 @@ class ParallelAnalyzer:
             remaining = [t for t in tracks if t.file_path not in completed_paths]
             logger.warning(
                 "Process pool crashed (numpy/BLAS issue, likely Apple Silicon). "
-                "Falling back to sequential analysis for %d remaining tracks. "
-                "Run with --workers 1 to skip parallel processing entirely.",
+                "Falling back to single-track subprocess mode for %d remaining tracks. "
+                "Each track runs in its own subprocess -- the scan will not crash.",
                 len(remaining),
             )
-            yield from self._analyze_sequential(remaining, on_progress)
+            yield from self._analyze_one_by_one(remaining, on_progress)
 
-    def _analyze_sequential(
+    def _analyze_one_by_one(
         self,
         tracks: list[Track],
         on_progress: Callable[[Track], None] | None = None,
     ) -> Iterator[Track]:
-        """Fall-back: analyse tracks one at a time in the main process."""
+        """Fallback: analyze each track in its own fresh subprocess.
+
+        Analysis never runs in the main process, so a SIGSEGV in a worker
+        only kills that one subprocess.  The main process catches
+        BrokenProcessPool, marks the track as failed, and moves on.
+        """
+        mp_context = multiprocessing.get_context("spawn")
+        failed = 0
+
         for track in tracks:
             try:
-                analyzed = _analyze_single(track)
+                with ProcessPoolExecutor(
+                    max_workers=1,
+                    mp_context=mp_context,
+                    initializer=_worker_init,
+                    max_tasks_per_child=1,
+                ) as pool:
+                    future = pool.submit(_analyze_single, track)
+                    analyzed = future.result(timeout=120)
+            except BrokenProcessPool:
+                # Worker segfaulted -- mark track and continue
+                logger.warning(
+                    "Worker crashed analyzing %s (likely BLAS segfault) -- skipping",
+                    track.file_path,
+                )
+                analyzed = track.model_copy(
+                    update={"comment": "Analysis skipped: worker crash (Apple Silicon BLAS)"}
+                )
+                failed += 1
             except Exception as e:
                 logger.error("Analysis failed for %s: %s", track.file_path, e)
-                analyzed = track
+                analyzed = track.model_copy(update={"comment": f"Analysis error: {e}"})
+                failed += 1
+
             if on_progress:
                 on_progress(analyzed)
             yield analyzed
+
+        if failed:
+            logger.warning(
+                "%d/%d tracks could not be analysed due to worker crashes. "
+                "These tracks are saved but will be missing BPM/key/energy data. "
+                "Re-run 'crate scan --force' later to retry them.",
+                failed,
+                len(tracks),
+            )
