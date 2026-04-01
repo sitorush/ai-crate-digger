@@ -11,7 +11,7 @@
 dj scan ~/Music --workers 4
 ```
 
-The default uses all CPU cores minus one. For very large libraries, consider scanning without analysis first, then analyzing:
+The default uses all CPU cores minus one. For very large libraries, consider scanning without analysis first, then analysing:
 
 ```bash
 dj scan ~/Music --no-analyze  # Fast metadata extraction
@@ -22,7 +22,7 @@ dj scan ~/Music --force       # Then full analysis
 
 **Problem:** BPM values differ from Rekordbox/Traktor.
 
-**Cause:** Different algorithms. ai-crate-digger uses Essentia's RhythmExtractor2013 which is optimized for electronic music and should match Rekordbox closely.
+**Cause:** Different algorithms. ai-crate-digger uses Essentia's RhythmExtractor2013, which is optimised for electronic music and should match Rekordbox closely.
 
 **If values still differ:** The track may have tempo changes or unusual time signatures.
 
@@ -30,7 +30,7 @@ dj scan ~/Music --force       # Then full analysis
 
 **Problem:** Tags like "Garage / Bassline / Grime" appear as one tag.
 
-**Cause:** Tag normalization happens during scanning. Existing tracks need re-normalization.
+**Cause:** Tag normalisation happens during scanning. Existing tracks need re-normalisation.
 
 **Solution:** Re-scan with force:
 ```bash

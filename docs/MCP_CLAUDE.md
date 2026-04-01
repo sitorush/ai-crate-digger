@@ -89,7 +89,7 @@ The MCP server runs on **your computer**, not inside Claude. When exporting play
 /Users/yourname/Downloads/set.m3u
 C:\Users\yourname\Desktop\playlist.m3u
 
-# Wrong (Claude's container — won't work)
+# Wrong (Claude's container  -- won't work)
 /mnt/user-data/outputs/playlist.m3u
 /home/claude/playlist.m3u
 ```
@@ -98,7 +98,7 @@ C:\Users\yourname\Desktop\playlist.m3u
 
 **"Server disconnected" error**
 1. Verify the binary path: `/path/to/.venv/bin/crate --version`
-2. Test the server manually: `/path/to/.venv/bin/crate mcp-server` (should block with no output — that's correct)
+2. Test the server manually: `/path/to/.venv/bin/crate mcp-server` (should block with no output  -- that's correct)
 3. Check Claude Desktop logs: `~/Library/Logs/Claude/` (macOS)
 
 **"Permission denied" on export**

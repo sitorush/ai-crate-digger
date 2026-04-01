@@ -11,7 +11,7 @@ The ai-crate-digger MCP server provides tools for music library management and p
 
 ### get_candidate_pool
 
-Returns filtered tracks in compact JSON format optimized for AI selection decisions.
+Returns filtered tracks in compact JSON format optimised for AI selection decisions.
 
 **Use case:** Fetch a pool of compatible tracks for a specific playlist phase (e.g., "warm-up house tracks", "peak techno section").
 

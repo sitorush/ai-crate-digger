@@ -72,9 +72,9 @@ crate playlist --tags techno --output ~/Desktop/set.xml --format rekordbox
 
 Control your library through natural language:
 
-- [Claude Desktop](./MCP_CLAUDE.md) — "Find me some deep house around 122 BPM"
-- [ChatGPT Desktop](./MCP_CHATGPT.md) — same tools, different app
-- [Other apps](./MCP_GENERIC.md) — Cursor, Cline, Continue, Zed
+- [Claude Desktop](./MCP_CLAUDE.md)  -- "Find me some deep house around 122 BPM"
+- [ChatGPT Desktop](./MCP_CHATGPT.md)  -- same tools, different app
+- [Other apps](./MCP_GENERIC.md)  -- Cursor, Cline, Continue, Zed
 
 ## Quick Reference
 

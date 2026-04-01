@@ -1,6 +1,6 @@
 # ai-crate-digger - Installation Instructions
 
-**For Mac Users (No Technical Knowledge Required)**
+**For Mac Users**
 
 ---
 
@@ -88,7 +88,7 @@ You'll see a simple menu:
 - **Generates playlists** with harmonic mixing (songs that flow well together)
 - **Exports** to formats DJs use (M3U, Rekordbox XML)
 
-Perfect for organising your music and creating DJ sets!
+Good for organising your music collection and building DJ sets.
 
 ---
 

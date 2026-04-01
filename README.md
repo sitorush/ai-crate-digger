@@ -1,15 +1,15 @@
 # ai-crate-digger
 
-AI-powered music library scanner and playlist generator for DJs. Scan your local music files, analyse BPM/key/energy, and generate perfectly mixed playlists — all from the command line or by asking an AI assistant in plain English.
+AI-powered music library scanner and playlist generator for DJs. Scan your local music files, analyse BPM/key/energy, and generate playlists  -- all from the command line or through an AI assistant.
 
 ## What It Does
 
-- **Scans your library** — finds all audio files, extracts ID3 metadata, detects duplicates
-- **Analyses audio** — BPM detection, musical key (+ Camelot wheel), energy, danceability
-- **Classifies genres** — ML-based genre tagging via Essentia for untagged tracks (optional)
-- **Filters and generates playlists** — by tag, BPM, key, energy, label, artist
-- **Exports** — M3U (universal) and Rekordbox XML
-- **Connects to AI assistants** — MCP server for Claude Desktop, ChatGPT, and any MCP-compatible app
+- **Scans your library**  -- finds all audio files, extracts ID3 metadata, detects duplicates
+- **Analyses audio**  -- BPM detection, musical key (+ Camelot wheel), energy, danceability
+- **Classifies genres**  -- ML-based genre tagging via Essentia for untagged tracks (optional)
+- **Filters and generates playlists**  -- by tag, BPM, key, energy, label, artist
+- **Exports**  -- M3U (universal) and Rekordbox XML
+- **Connects to AI assistants**  -- MCP server for Claude Desktop, ChatGPT, and any MCP-compatible app
 
 ## How It Works
 
@@ -46,7 +46,7 @@ Your music files (MP3, FLAC, WAV, AIFF, M4A, OGG)
 └───────┘  └──────────────────────┘
 ```
 
-Analysis runs in parallel across all CPU cores. A library of 6,000+ tracks takes 45–90 minutes on first scan; subsequent scans are incremental (new files only).
+Analysis runs in parallel across all CPU cores. A library of 6,000+ tracks takes 45-90 minutes on first scan; subsequent scans are incremental (new files only).
 
 ## Requirements
 
@@ -86,7 +86,7 @@ crate playlist --tags techno --output ~/Desktop/set.xml --format rekordbox
 
 ## Connect to an AI Assistant
 
-Ask your AI assistant to manage your music library in plain English.
+Ask your AI assistant to manage your music library.
 
 ### Claude Desktop
 
@@ -122,7 +122,7 @@ Generic guide: [docs/MCP_GENERIC.md](docs/MCP_GENERIC.md)
 - "Search my music library for dark techno around 130 BPM"
 - "Make me a 2-hour gym playlist that builds from 124 to 132 BPM"
 - "What are my top 5 genres by track count?"
-- "Find tracks similar to Amelie Lens — hypnotic, industrial feel"
+- "Find tracks similar to Amelie Lens  -- hypnotic, industrial feel"
 - "Export a peak-time techno set to my Desktop in Rekordbox format"
 
 ## CLI Reference

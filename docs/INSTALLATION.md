@@ -80,7 +80,7 @@ export CRATE_VECTOR_PATH=~/my-custom-path/vectors
 Essentia provides ML-based genre classification for tracks without genre tags. It's a large dependency (~500MB) and optional.
 
 ```bash
-# Requires TensorFlow — install TF first if you don't have it
+# Requires TensorFlow  -- install TF first if you don't have it
 pip install tensorflow
 pip install essentia-tensorflow
 ```

@@ -1,13 +1,13 @@
 # Connecting to Any MCP-Compatible App
 
-ai-crate-digger implements the [Model Context Protocol (MCP)](https://modelcontextprotocol.io) — an open standard for connecting AI assistants to external tools. Any app that supports MCP can connect to your music library.
+ai-crate-digger implements the [Model Context Protocol (MCP)](https://modelcontextprotocol.io)  -- an open standard for connecting AI assistants to external tools. Any app that supports MCP can connect to your music library.
 
 ## What You Need
 
 Two things in every MCP config:
 
-1. **`command`** — the `crate` binary in your ai-crate-digger virtual environment
-2. **`args`** — `["mcp-server"]`
+1. **`command`**  -- the `crate` binary in your ai-crate-digger virtual environment
+2. **`args`**  -- `["mcp-server"]`
 
 ```json
 {

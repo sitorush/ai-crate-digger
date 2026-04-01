@@ -1,6 +1,6 @@
 # ChatGPT Desktop Integration (MCP)
 
-ai-crate-digger works with the ChatGPT desktop app via the Model Context Protocol (MCP). The same server that powers Claude Desktop works here — only the config file location differs.
+ai-crate-digger works with the ChatGPT desktop app via the Model Context Protocol (MCP). The same server that powers Claude Desktop works here  -- only the config file location differs.
 
 > **Requires:** ChatGPT desktop app (not the web app). Download from https://openai.com/chatgpt/download/
 
@@ -69,7 +69,7 @@ Quit and reopen. The ai-crate-digger tools should appear in the tools menu.
 - "Search my music library for afro house tracks between 120 and 125 BPM"
 - "Create a 90-minute warm-up set starting at 122 BPM and building to 128"
 - "How many tracks do I have in each key?"
-- "Find tracks similar to Peggy Gou — I want that Korean disco feel"
+- "Find tracks similar to Peggy Gou  -- I want that Korean disco feel"
 - "Export a tech house playlist to my Desktop in Rekordbox format"
 
 ## Differences vs Claude Desktop
@@ -80,7 +80,7 @@ Quit and reopen. The ai-crate-digger tools should appear in the tools menu.
 | MCP server command | same | same |
 | Tool names and behaviour | native MCP | native MCP |
 
-The MCP server and all tools are identical — only where you put the config differs.
+The MCP server and all tools are identical  -- only where you put the config differs.
 
 ## Troubleshooting
 
@@ -93,4 +93,4 @@ The MCP server and all tools are identical — only where you put the config dif
 Use paths on your local machine (`~/Desktop/playlist.m3u`). Avoid paths inside ChatGPT's sandbox.
 
 **Config path not found**
-If the Developer settings aren't visible, check for a ChatGPT desktop app update — MCP support requires a recent version.
+If the Developer settings aren't visible, check for a ChatGPT desktop app update  -- MCP support requires a recent version.

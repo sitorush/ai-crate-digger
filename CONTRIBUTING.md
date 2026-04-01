@@ -17,7 +17,7 @@ uv run pre-commit install
 uv run pytest
 ```
 
-Tests require no external services — audio analysis is mocked, the database uses in-memory SQLite.
+Tests require no external services  -- audio analysis is mocked, the database uses in-memory SQLite.
 
 ## Code Style
 
@@ -53,7 +53,7 @@ src/ai_crate_digger/
 
 ## Submitting a PR
 
-- Keep PRs focused — one feature or fix per PR
+- Keep PRs focused  -- one feature or fix per PR
 - Include tests for new behaviour
 - Update relevant docs if adding/changing a CLI command or MCP tool
 - Run `uv run pytest` before pushing
