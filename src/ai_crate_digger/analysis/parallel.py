@@ -42,8 +42,52 @@ def _analyze_single(track: Track) -> Track:
         return analyze_track(track)
     except Exception as e:
         logger.error("Analysis failed for %s: %s", track.file_path, e)
-        # Return original track with error noted
         return track.model_copy(update={"comment": f"Analysis error: {e}"})
+
+
+def _run_pool(
+    tracks: list[Track],
+    max_workers: int,
+    max_tasks_per_child: int,
+    on_progress: Callable[[Track], None] | None,
+) -> tuple[list[Track], set[Path]]:
+    """Run a fresh pool over a list of tracks.
+
+    Returns:
+        (results, completed_paths) -- results may be partial if pool crashed.
+    """
+    mp_context = multiprocessing.get_context("spawn")
+    results: list[Track] = []
+    completed_paths: set[Path] = set()
+
+    try:
+        with ProcessPoolExecutor(
+            max_workers=max_workers,
+            mp_context=mp_context,
+            initializer=_worker_init,
+            max_tasks_per_child=max_tasks_per_child,
+        ) as pool:
+            futures = {pool.submit(_analyze_single, t): t for t in tracks}
+            for future in as_completed(futures):
+                original = futures[future]
+                try:
+                    analyzed = future.result()
+                except BrokenProcessPool:
+                    # One worker crashed -- exit loop, let caller handle remaining
+                    return results, completed_paths
+                except Exception as e:
+                    logger.error("Worker failed for %s: %s", original.file_path, e)
+                    analyzed = original.model_copy(update={"comment": f"Analysis error: {e}"})
+
+                completed_paths.add(original.file_path)
+                if on_progress:
+                    on_progress(analyzed)
+                results.append(analyzed)
+
+    except Exception:
+        pass
+
+    return results, completed_paths
 
 
 class ParallelAnalyzer:
@@ -65,12 +109,16 @@ class ParallelAnalyzer:
         tracks: list[Track],
         on_progress: Callable[[Track], None] | None = None,
     ) -> Iterator[Track]:
-        """Analyze tracks in parallel, falling back to single-subprocess mode if workers crash.
+        """Analyze tracks in parallel with automatic crash recovery.
 
-        Analysis always runs in a subprocess -- never in the main process -- so
-        a SIGSEGV in numpy/BLAS kills the worker, not the scan.  The main
-        process catches BrokenProcessPool, skips the crashed track, and
-        continues.
+        Uses a pool with max_tasks_per_child=1 so each track gets a fresh
+        subprocess -- accumulated BLAS/numpy state can't carry over between
+        tracks.  On BrokenProcessPool the pool is restarted for remaining
+        tracks.  A track that crashes its worker is skipped so the scan
+        always completes.
+
+        Analysis never runs in the main process, so a SIGSEGV only kills the
+        worker, not the scan.
 
         Args:
             tracks: List of tracks to analyze
@@ -88,103 +136,44 @@ class ParallelAnalyzer:
             self.max_workers,
         )
 
-        # spawn is the default on macOS but setting it explicitly ensures
-        # worker processes start clean (no inherited numpy/BLAS state).
-        mp_context = multiprocessing.get_context("spawn")
+        remaining = list(tracks)
+        restart_count = 0
+        max_workers: int = self.max_workers or 1
 
-        completed_paths: set[Path] = set()
-        pool_crashed = False
-
-        try:
-            with ProcessPoolExecutor(
-                max_workers=self.max_workers,
-                mp_context=mp_context,
-                initializer=_worker_init,
-                # Restart workers every N tasks to prevent memory/state accumulation.
-                # This significantly reduces segfault risk on Apple Silicon.
-                max_tasks_per_child=4,
-            ) as pool:
-                futures = {pool.submit(_analyze_single, track): track for track in tracks}
-
-                for future in as_completed(futures):
-                    original = futures[future]
-                    try:
-                        analyzed = future.result()
-                        completed_paths.add(original.file_path)
-                        if on_progress:
-                            on_progress(analyzed)
-                        yield analyzed
-                    except BrokenProcessPool:
-                        pool_crashed = True
-                        break
-                    except Exception as e:
-                        logger.error("Worker failed for %s: %s", original.file_path, e)
-                        completed_paths.add(original.file_path)
-                        if on_progress:
-                            on_progress(original)
-                        yield original
-
-        except Exception:
-            pool_crashed = True
-
-        if pool_crashed:
-            remaining = [t for t in tracks if t.file_path not in completed_paths]
-            logger.warning(
-                "Process pool crashed (numpy/BLAS issue, likely Apple Silicon). "
-                "Falling back to single-track subprocess mode for %d remaining tracks. "
-                "Each track runs in its own subprocess -- the scan will not crash.",
-                len(remaining),
+        while remaining:
+            results, completed_paths = _run_pool(
+                remaining,
+                max_workers=max_workers,
+                # max_tasks_per_child=1: each track gets a fresh process so
+                # crashes don't contaminate subsequent tracks in the same worker.
+                max_tasks_per_child=1,
+                on_progress=on_progress,
             )
-            yield from self._analyze_one_by_one(remaining, on_progress)
 
-    def _analyze_one_by_one(
-        self,
-        tracks: list[Track],
-        on_progress: Callable[[Track], None] | None = None,
-    ) -> Iterator[Track]:
-        """Fallback: analyze each track in its own fresh subprocess.
+            yield from results
 
-        Analysis never runs in the main process, so a SIGSEGV in a worker
-        only kills that one subprocess.  The main process catches
-        BrokenProcessPool, marks the track as failed, and moves on.
-        """
-        mp_context = multiprocessing.get_context("spawn")
-        failed = 0
+            still_remaining = [t for t in remaining if t.file_path not in completed_paths]
 
-        for track in tracks:
-            try:
-                with ProcessPoolExecutor(
-                    max_workers=1,
-                    mp_context=mp_context,
-                    initializer=_worker_init,
-                    max_tasks_per_child=1,
-                ) as pool:
-                    future = pool.submit(_analyze_single, track)
-                    analyzed = future.result(timeout=120)
-            except BrokenProcessPool:
-                # Worker segfaulted -- mark track and continue
-                logger.warning(
-                    "Worker crashed analyzing %s (likely BLAS segfault) -- skipping",
-                    track.file_path,
-                )
+            if not still_remaining:
+                break  # All done
+
+            # Pool crashed -- some tracks were in-flight and lost.
+            # Skip them (they're the likely crash cause) and continue.
+            restart_count += 1
+            skipped = still_remaining[:max_workers]
+            remaining = still_remaining[max_workers:]
+
+            logger.warning(
+                "Pool crashed (restart %d). Skipping %d tracks that were in-flight: %s",
+                restart_count,
+                len(skipped),
+                ", ".join(t.file_path.name for t in skipped),
+            )
+
+            for track in skipped:
                 analyzed = track.model_copy(
                     update={"comment": "Analysis skipped: worker crash (Apple Silicon BLAS)"}
                 )
-                failed += 1
-            except Exception as e:
-                logger.error("Analysis failed for %s: %s", track.file_path, e)
-                analyzed = track.model_copy(update={"comment": f"Analysis error: {e}"})
-                failed += 1
-
-            if on_progress:
-                on_progress(analyzed)
-            yield analyzed
-
-        if failed:
-            logger.warning(
-                "%d/%d tracks could not be analysed due to worker crashes. "
-                "These tracks are saved but will be missing BPM/key/energy data. "
-                "Re-run 'crate scan --force' later to retry them.",
-                failed,
-                len(tracks),
-            )
+                if on_progress:
+                    on_progress(analyzed)
+                yield analyzed
