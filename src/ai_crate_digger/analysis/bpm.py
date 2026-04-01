@@ -57,6 +57,13 @@ def estimate_bpm_from_file(file_path: Path) -> float | None:
         # Load at 44100 Hz for best rhythm detection
         audio = MonoLoader(filename=str(file_path), sampleRate=44100)()
 
+        # RhythmExtractor2013 has an internal buffer limit -- long tracks overflow it.
+        # 60 seconds from the middle of the track is more than enough for BPM detection.
+        max_samples = 44100 * 60
+        if len(audio) > max_samples:
+            mid = len(audio) // 2
+            audio = audio[mid - max_samples // 2 : mid + max_samples // 2]
+
         rhythm = RhythmExtractor2013()
         bpm, _, confidence, _, _ = rhythm(audio)
 

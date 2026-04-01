@@ -19,6 +19,24 @@ LABELS_PATH = MODEL_DIR / "discogs-effnet-bs64-1.json"
 # Lazy-loaded globals
 _model = None
 _labels: list[str] = []
+_tf_available: bool | None = None  # None = not yet checked
+
+
+def _check_tf_available() -> bool:
+    """Check once whether essentia-tensorflow is installed."""
+    global _tf_available
+    if _tf_available is None:
+        try:
+            from essentia.standard import TensorflowPredictEffnetDiscogs  # noqa: F401
+
+            _tf_available = True
+        except ImportError:
+            _tf_available = False
+            logger.debug(
+                "essentia-tensorflow not installed -- genre classification disabled. "
+                "Install with: pip install essentia-tensorflow"
+            )
+    return _tf_available
 
 
 def _ensure_model_downloaded() -> None:
@@ -72,6 +90,9 @@ def classify_genre(
     Returns:
         List of genre strings (simplified, without "Electronic---" prefix)
     """
+    if not _check_tf_available():
+        return []
+
     try:
         _load_model()
         from essentia.standard import MonoLoader
