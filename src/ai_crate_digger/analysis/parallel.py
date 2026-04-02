@@ -3,6 +3,7 @@
 import logging
 import multiprocessing
 import os
+from pathlib import Path
 from collections.abc import Callable, Iterator
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from concurrent.futures.process import BrokenProcessPool
@@ -98,7 +99,7 @@ class ParallelAnalyzer:
         restart_count = 0
 
         while remaining:
-            completed_paths: set = set()
+            completed_paths: set[Path] = set()
             pool_crashed = False
 
             mp_context = multiprocessing.get_context("spawn")
