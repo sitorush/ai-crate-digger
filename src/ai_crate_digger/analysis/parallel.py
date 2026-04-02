@@ -3,10 +3,10 @@
 import logging
 import multiprocessing
 import os
-from pathlib import Path
 from collections.abc import Callable, Iterator
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from concurrent.futures.process import BrokenProcessPool
+from pathlib import Path
 
 from ai_crate_digger.analysis.analyzer import analyze_track
 from ai_crate_digger.core.config import get_settings
