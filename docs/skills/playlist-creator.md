@@ -10,7 +10,7 @@ Generate high-quality DJ playlists using the crate-digger MCP server.
 
 ## MCP Server
 
-The MCP server is **crate-digger** (previously referred to as dj-catalog). All tool calls are prefixed `crate-digger:`. Confirm it's connected before starting — if tools fail to load, ask the user to check the server is running.
+The MCP server is **ai-crate-digger** (previously referred to as dj-catalog). All tool calls are prefixed `ai-crate-digger:`. Confirm it's connected before starting — if tools fail to load, ask the user to check the server is running.
 
 ---
 
