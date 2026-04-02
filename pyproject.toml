@@ -63,6 +63,7 @@ select = ["E", "F", "I", "N", "UP", "B", "A", "C4", "PT", "RET", "SIM"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 asyncio_mode = "auto"
+pythonpath = ["src"]
 addopts = "--cov=ai_crate_digger --cov-report=term-missing --cov-fail-under=55"
 
 [tool.coverage.run]
