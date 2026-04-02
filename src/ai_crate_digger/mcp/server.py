@@ -34,3 +34,7 @@ def main() -> None:
     """Entry point for MCP server."""
     logging.basicConfig(level=logging.INFO)
     asyncio.run(run_server())
+
+
+if __name__ == "__main__":
+    main()
