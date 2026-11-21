@@ -35,3 +35,9 @@ class ExportError(DJCatalogError):
     """Error exporting playlist."""
 
     pass
+
+
+class FingerprintError(DJCatalogError):
+    """Error fingerprinting audio or identifying a mix."""
+
+    pass
