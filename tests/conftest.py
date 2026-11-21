@@ -8,6 +8,8 @@ from pathlib import Path
 
 import pytest
 
+from ai_crate_digger.core.models import Track
+
 
 @pytest.fixture
 def tmp_dir() -> Iterator[Path]:
@@ -39,10 +41,8 @@ def sample_wav(tmp_dir: Path) -> Path:
 
 
 @pytest.fixture
-def sample_track():
+def sample_track() -> Track:
     """Create a sample track for testing."""
-    from ai_crate_digger.core.models import Track
-
     return Track(
         file_path=Path("/music/test.mp3"),
         file_hash="abc123",

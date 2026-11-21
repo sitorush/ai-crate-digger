@@ -1,5 +1,6 @@
 """Tests for SQLite database."""
 
+from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
@@ -9,7 +10,7 @@ from ai_crate_digger.storage.database import Database
 
 
 @pytest.fixture
-def db(tmp_dir: Path):
+def db(tmp_dir: Path) -> Iterator[Database]:
     """Create temporary database."""
     db_path = tmp_dir / "test.db"
     database = Database(db_path)

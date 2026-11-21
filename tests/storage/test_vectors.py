@@ -9,7 +9,7 @@ from ai_crate_digger.storage.vectors import VectorStore
 
 
 @pytest.fixture
-def vector_store(tmp_dir: Path):
+def vector_store(tmp_dir: Path) -> VectorStore:
     """Create temporary vector store."""
     store = VectorStore(tmp_dir / ".chroma")
     store.init()

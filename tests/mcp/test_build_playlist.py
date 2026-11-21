@@ -11,7 +11,7 @@ from ai_crate_digger.storage import Database
 
 
 @pytest.fixture
-def db_with_export_tracks(tmp_path):
+def db_with_export_tracks(tmp_path: Path) -> Database:
     """Create database with tracks for export testing."""
     db = Database(tmp_path / "test.db")
     db.init()
@@ -46,7 +46,7 @@ def db_with_export_tracks(tmp_path):
 
 
 @pytest.mark.asyncio
-async def test_build_playlist_with_path(db_with_export_tracks, tmp_path):
+async def test_build_playlist_with_path(db_with_export_tracks: Database, tmp_path: Path) -> None:
     """Test export with user-provided path."""
     output_path = tmp_path / "test_playlist.m3u"
     args = {
@@ -65,7 +65,9 @@ async def test_build_playlist_with_path(db_with_export_tracks, tmp_path):
 
 
 @pytest.mark.asyncio
-async def test_build_playlist_default_path(db_with_export_tracks, tmp_path, monkeypatch):
+async def test_build_playlist_default_path(
+    db_with_export_tracks: Database, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """Test export with default path (~/Downloads)."""
     # Mock output_path setting
 
@@ -80,7 +82,9 @@ async def test_build_playlist_default_path(db_with_export_tracks, tmp_path, monk
 
 
 @pytest.mark.asyncio
-async def test_build_playlist_with_validation(db_with_export_tracks, tmp_path):
+async def test_build_playlist_with_validation(
+    db_with_export_tracks: Database, tmp_path: Path
+) -> None:
     """Test export with validation enabled."""
     output_path = tmp_path / "test_playlist.m3u"
     args = {
@@ -98,7 +102,9 @@ async def test_build_playlist_with_validation(db_with_export_tracks, tmp_path):
 
 
 @pytest.mark.asyncio
-async def test_build_playlist_rekordbox_format(db_with_export_tracks, tmp_path):
+async def test_build_playlist_rekordbox_format(
+    db_with_export_tracks: Database, tmp_path: Path
+) -> None:
     """Test export to Rekordbox XML format."""
     output_path = tmp_path / "test_playlist.xml"
     args = {
@@ -116,7 +122,9 @@ async def test_build_playlist_rekordbox_format(db_with_export_tracks, tmp_path):
 
 
 @pytest.mark.asyncio
-async def test_build_playlist_no_tracks_found(db_with_export_tracks, tmp_path):
+async def test_build_playlist_no_tracks_found(
+    db_with_export_tracks: Database, tmp_path: Path
+) -> None:
     """Test error handling when no tracks found."""
     output_path = tmp_path / "test_playlist.m3u"
     args = {
@@ -133,7 +141,9 @@ async def test_build_playlist_no_tracks_found(db_with_export_tracks, tmp_path):
 
 
 @pytest.mark.asyncio
-async def test_build_playlist_duration_calculation(db_with_export_tracks, tmp_path):
+async def test_build_playlist_duration_calculation(
+    db_with_export_tracks: Database, tmp_path: Path
+) -> None:
     """Test total duration calculation."""
     output_path = tmp_path / "test_playlist.m3u"
     args = {

@@ -1,6 +1,7 @@
 """Tests for get_candidate_pool MCP tool."""
 
 import json
+from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
@@ -11,7 +12,7 @@ from ai_crate_digger.storage import Database
 
 
 @pytest.fixture
-def db_with_tracks(tmp_dir):
+def db_with_tracks(tmp_dir: Path) -> Iterator[Database]:
     """Create database with diverse test tracks."""
     db_path = tmp_dir / "test.db"
     db = Database(db_path)
@@ -144,7 +145,7 @@ def db_with_tracks(tmp_dir):
 
 
 @pytest.mark.asyncio
-async def test_get_candidate_pool_basic_filtering(db_with_tracks):
+async def test_get_candidate_pool_basic_filtering(db_with_tracks: Database) -> None:
     """Test basic tag filtering."""
     result = await _get_candidate_pool(
         db_with_tracks,
@@ -169,7 +170,7 @@ async def test_get_candidate_pool_basic_filtering(db_with_tracks):
 
 
 @pytest.mark.asyncio
-async def test_get_candidate_pool_bpm_filtering(db_with_tracks):
+async def test_get_candidate_pool_bpm_filtering(db_with_tracks: Database) -> None:
     """Test BPM range filtering."""
     result = await _get_candidate_pool(
         db_with_tracks,
@@ -191,7 +192,7 @@ async def test_get_candidate_pool_bpm_filtering(db_with_tracks):
 
 
 @pytest.mark.asyncio
-async def test_get_candidate_pool_energy_filtering(db_with_tracks):
+async def test_get_candidate_pool_energy_filtering(db_with_tracks: Database) -> None:
     """Test energy minimum filtering."""
     result = await _get_candidate_pool(
         db_with_tracks,
@@ -213,7 +214,7 @@ async def test_get_candidate_pool_energy_filtering(db_with_tracks):
 
 
 @pytest.mark.asyncio
-async def test_get_candidate_pool_key_compatibility(db_with_tracks):
+async def test_get_candidate_pool_key_compatibility(db_with_tracks: Database) -> None:
     """Test harmonic key filtering."""
     result = await _get_candidate_pool(
         db_with_tracks,
@@ -236,7 +237,7 @@ async def test_get_candidate_pool_key_compatibility(db_with_tracks):
 
 
 @pytest.mark.asyncio
-async def test_get_candidate_pool_exclude_hashes(db_with_tracks):
+async def test_get_candidate_pool_exclude_hashes(db_with_tracks: Database) -> None:
     """Test excluding specific hashes."""
     result = await _get_candidate_pool(
         db_with_tracks,
@@ -256,7 +257,7 @@ async def test_get_candidate_pool_exclude_hashes(db_with_tracks):
 
 
 @pytest.mark.asyncio
-async def test_get_candidate_pool_sort_bpm_asc(db_with_tracks):
+async def test_get_candidate_pool_sort_bpm_asc(db_with_tracks: Database) -> None:
     """Test sorting by BPM ascending."""
     result = await _get_candidate_pool(
         db_with_tracks,
@@ -276,7 +277,7 @@ async def test_get_candidate_pool_sort_bpm_asc(db_with_tracks):
 
 
 @pytest.mark.asyncio
-async def test_get_candidate_pool_sort_energy_desc(db_with_tracks):
+async def test_get_candidate_pool_sort_energy_desc(db_with_tracks: Database) -> None:
     """Test sorting by energy descending."""
     result = await _get_candidate_pool(
         db_with_tracks,
@@ -296,7 +297,7 @@ async def test_get_candidate_pool_sort_energy_desc(db_with_tracks):
 
 
 @pytest.mark.asyncio
-async def test_get_candidate_pool_sort_random(db_with_tracks):
+async def test_get_candidate_pool_sort_random(db_with_tracks: Database) -> None:
     """Test random sorting (just verify it doesn't crash)."""
     result = await _get_candidate_pool(
         db_with_tracks,
@@ -316,7 +317,7 @@ async def test_get_candidate_pool_sort_random(db_with_tracks):
 
 
 @pytest.mark.asyncio
-async def test_get_candidate_pool_limit(db_with_tracks):
+async def test_get_candidate_pool_limit(db_with_tracks: Database) -> None:
     """Test result limit."""
     result = await _get_candidate_pool(
         db_with_tracks,
@@ -335,7 +336,7 @@ async def test_get_candidate_pool_limit(db_with_tracks):
 
 
 @pytest.mark.asyncio
-async def test_get_candidate_pool_compact_json_format(db_with_tracks):
+async def test_get_candidate_pool_compact_json_format(db_with_tracks: Database) -> None:
     """Test that output contains only required fields."""
     result = await _get_candidate_pool(
         db_with_tracks,
@@ -369,7 +370,7 @@ async def test_get_candidate_pool_compact_json_format(db_with_tracks):
 
 
 @pytest.mark.asyncio
-async def test_get_candidate_pool_empty_result(db_with_tracks):
+async def test_get_candidate_pool_empty_result(db_with_tracks: Database) -> None:
     """Test handling empty results."""
     result = await _get_candidate_pool(
         db_with_tracks,
