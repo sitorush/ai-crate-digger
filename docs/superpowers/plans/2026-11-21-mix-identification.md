@@ -18,7 +18,7 @@
 - **Deviations from the spec** (found while prototyping) are listed in the amendments patch in Task 13. The important ones: no `fingerprinted_at` column on `tracks` (a new table is the only migration-free option), `get_job_status` replaces `get_mix_result`, and 5 s blocks replace 10 s windows.
 - **Not in scope:** live microphone identification, Beatport/ZipDJ lookups.
 - **Commit hook:** Tom's global Claude hook runs `mypy .` (tests included, strict) before every `git commit`. All test code must be fully annotated; the plan's tests are. Commit `3487649` annotated the pre-existing tests so the hook passes. Do not bypass the hook.
-- **Progress:** Task 0 done (branch `feat/mix-identification`). Prep commit `3487649` and Task 1 (`21caa66`) are done; Task 1's test patch below was applied with `monkeypatch: pytest.MonkeyPatch` annotations. Start at Task 2.
+- **Progress:** Task 0 done (branch `feat/mix-identification`). Prep commit `3487649` and Tasks 1 to 6 are done (Task 1's test patch below was applied with `monkeypatch: pytest.MonkeyPatch` annotations; Task 6's `unmatched` assertion was split into three asserts to satisfy strict mypy). Start at Task 7.
 
 ## File structure
 
@@ -812,7 +812,7 @@ def test_deleting_a_track_without_fingerprint_still_works(db: Database) -> None:
 uv run pytest tests/storage/test_fingerprints.py -q --no-cov
 ```
 
-Expected: 6 failures, `AttributeError: 'Database' object has no attribute 'upsert_fingerprint'`.
+Expected: 5 failures, `AttributeError: 'Database' object has no attribute 'upsert_fingerprint'` (the sixth test, deleting a track without a fingerprint, already passes).
 
 - [ ] **Step 3: Implement**
 
@@ -1361,7 +1361,9 @@ def test_unknown_audio_is_reported_as_unmatched(index: LibraryIndex) -> None:
     mix = make_track(9999, 40)
     result = _identify(index, mix)
     assert result.segments == []
-    assert result.unmatched == [(0.0, pytest.approx(result.duration_sec))]
+    assert len(result.unmatched) == 1
+    assert result.unmatched[0][0] == 0.0
+    assert result.unmatched[0][1] == pytest.approx(result.duration_sec)
 
 
 def test_gap_between_known_tracks_is_unmatched(
@@ -1769,6 +1771,22 @@ def build_library(root: Path, n_tracks: int = 4, seconds: float = 40) -> Library
     return Library(db=db, settings=settings, audio=audio, root=root)
 ```
 
+`soundfile` has no type stubs and the commit hook runs strict mypy over tests, so extend the override in `pyproject.toml`:
+
+```diff
+--- a/pyproject.toml
++++ b/pyproject.toml
+@@ -52,7 +52,7 @@
+ plugins = ["pydantic.mypy"]
+ 
+ [[tool.mypy.overrides]]
+-module = ["essentia.*", "scipy.*"]
++module = ["essentia.*", "scipy.*", "soundfile.*"]
+ ignore_missing_imports = true
+ 
+ [tool.ruff]
+```
+
 `tests/conftest.py`:
 
 ```diff
@@ -2022,7 +2040,8 @@ Expected: `7 passed`. The worker-pool test spawns processes and takes a few seco
 
 ```bash
 uv run ruff format . && uv run ruff check --fix . && uv run mypy src/
-git add src/ai_crate_digger/fingerprint/indexer.py \
+git add pyproject.toml \
+  src/ai_crate_digger/fingerprint/indexer.py \
   tests/fingerprint/library.py \
   tests/fingerprint/test_indexer.py \
   tests/conftest.py
