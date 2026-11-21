@@ -1,7 +1,7 @@
 # Mix identification (audio fingerprinting) design
 
 **Date:** 2026-11-21
-**Status:** Draft, awaiting review
+**Status:** Approved for implementation (amended after prototyping, see Amendments)
 **Package:** `ai_crate_digger` (worktree `dj-catalog-impl`, branch `main`)
 
 ## Problem
@@ -58,28 +58,41 @@ New package `src/ai_crate_digger/fingerprint/`, laid out like `analysis/`:
 
 ### Storage
 
-- New `fingerprints` table in `catalog.db`: `track_hash TEXT` (the existing
-  file hash, so rescans and `clean_orphans` stay consistent), `hashes BLOB`
-  (packed hash and offset arrays), `n_hashes INTEGER`.
-- New `fingerprinted_at` column on `tracks` so indexing is incremental.
+- New `fingerprints` table in `catalog.db`: `track_hash TEXT` primary key (the
+  existing file hash, so rescans stay consistent), `version INTEGER` (scheme
+  version, bumped if fingerprint parameters change), `n_hashes INTEGER`,
+  `blob BLOB` (packed hash and anchor-time arrays).
+- No new column on `tracks`. A track counts as fingerprinted when a row with
+  the current version exists. `create_all` cannot add columns to an existing
+  SQLite table and the repo has no migration tooling, so a new table is the
+  only change that is safe for existing catalogues.
 - Per-track blobs rather than one row per hash. A full library (about 6,400
   tracks) would be hundreds of millions of rows otherwise. At query time the
   blobs load into sorted numpy arrays, an estimated 1 to 2 GB of RAM for the
   full library (to be confirmed by the benchmark).
-- `clean_orphans` also deletes fingerprints for removed tracks.
+- `Database.delete_track` also deletes the track's fingerprint, which covers
+  both the `clean_orphans` tool and `crate clean`.
 
 ### Matching
 
-1. Fingerprint the mix once per speed factor (0.92 to 1.08, about 1% steps).
-2. For each factor, look up every hash and vote on
-   `(track, mix_time - track_time)`. A genuine match is a sharp spike at one
-   offset.
-3. Slide 10 s windows with a 5 s hop. Keep the best `(track, factor)` per
-   window when its votes clear a threshold. Merge consecutive windows with the
-   same track and a consistent offset into one segment.
-4. Confidence is the vote count relative to the noise floor, banded high,
-   medium or low. The winning speed factor is reported as the tempo shift
-   (for example `+3.2%`).
+1. Extract spectrogram peaks from the mix once. For each speed hypothesis
+   (0.92 to 1.08 in 1% steps, in two modes: pitch follows tempo like a vinyl
+   pitch fader, or key lock where only tempo changes) rescale the peak
+   coordinates and hash them. No re-decoding or new spectrogram per factor.
+   Library tracks are hashed sparsely (each peak paired with the peaks ranked
+   3 to 7 after it) while the mix is hashed densely (ranks 1 to 24), so peaks
+   added or dropped by a second playing track do not break pairings.
+2. For each hypothesis, look up every hash and vote on
+   `(block, track, mix_time - track_time)`. A genuine match is a sharp spike
+   at one offset.
+3. Split the mix into non-overlapping 5 s blocks. Keep the best
+   `(track, hypothesis)` per block when its votes clear a threshold, and up to
+   two tracks per block so transitions show both. Merge consecutive blocks
+   with the same track and a consistent position in that track into one
+   segment.
+4. Confidence is the share of possible index pairs in the block that voted for
+   the match ("support"), banded high, medium or low. The winning speed factor
+   is reported as the tempo shift (for example `+3.2%`).
 5. Spans with no segment above threshold are returned as `unmatched`.
    Lower-confidence matches are kept and flagged, never silently dropped.
 
@@ -105,22 +118,26 @@ of `(start_sec, end_sec)`.)
 
 ### MCP tools (`mcp/tools.py`)
 
-- `index_fingerprints(force=False)`: fingerprint tracks without an index,
-  using the existing parallel analysis pool. Reports progress and counts.
-  `scan_library` gains an opt-in flag to fingerprint new files as it scans.
+- `index_fingerprints(force=False)`: fingerprint tracks without a current
+  fingerprint, using a process pool (same spawn and BLAS-thread settings as the
+  analysis pool, which is specific to `Track` objects). Runs as a background
+  job because a full library takes tens of minutes. `scan_library` is
+  unchanged for now.
 - `identify_mix(path | "latest")`: starts a background job, returns `job_id`
   immediately. `"latest"` resolves to the newest file in the inbox folder.
   Non-blocking because an hour-long mix takes minutes and the Claude Desktop
   tool-call timeout is not known.
-- `get_mix_result(job_id, min_confidence="medium")`: progress while running,
-  then the timeline JSON.
+- `get_job_status(job_id, min_confidence="medium")`: progress for either kind
+  of job, and for a finished mix job the timeline JSON from Section 2 (replaces
+  the earlier `get_mix_result`, so indexing can be polled the same way).
 - `build_playlist_from_mix(job_id, min_confidence, name, format)`: matched
   hashes in mix order into the existing `export_playlist` code.
 
 ### CLI
 
 `fingerprint` and `identify` commands alongside `scan` and `search`, sharing
-the same code path, results printed as a Rich table.
+the same code path, results printed as a Rich table. `identify` without a path
+uses the newest file in the inbox folder.
 
 ### Config (`core/config.py`, `Settings`)
 
@@ -148,6 +165,28 @@ settings.
   library with a known tracklist. Reports recall, false matches, RAM and run
   time. This is the gate for trusting the matcher on real mixes.
 - Every commit passes pytest, mypy and ruff. Small, frequent commits.
+
+## Amendments after prototyping
+
+A prototype on synthetic audio (600 tracks; mixes with pitch shifts up to 8%,
+key-lock stretch, noise, overlaps and unknown tracks) identified every track
+with no false matches. Differences from the first draft of this spec:
+
+- 5 s blocks instead of 10 s windows with a 5 s hop (same effect, simpler).
+- Speed search rescales peak coordinates instead of re-fingerprinting audio,
+  and covers both pitch-follows-tempo and key-lock hypotheses.
+- Asymmetric pairing between library (sparse) and mix (dense).
+- Confidence is "support" (share of possible pairs that voted), not a vote
+  count against a noise floor.
+- `MixSegment` carries `mode` (`pitch` or `keylock`) and no artist or title;
+  names are added from the catalogue when results are described.
+- Fingerprint status lives in the new table, not a `tracks` column.
+- `get_job_status` replaces `get_mix_result`.
+- `numpy` and `scipy` become explicit dependencies (already installed via
+  librosa).
+
+Confidence bands (support of 0.12 high, 0.05 medium, 0.02 low) come from
+synthetic audio and must be re-tuned with the benchmark on real mixes.
 
 ## Open questions
 
