@@ -497,6 +497,22 @@ class Database:
         )
         return int(self.session.execute(stmt).scalar_one())
 
+    def fingerprint_signature(self, version: int) -> tuple[int, int, str | None]:
+        """Cheap summary that changes whenever fingerprints of ``version`` change.
+
+        Returns the fingerprint count, total hash count and latest ``created_at``
+        (ISO string, or None when there are none).
+        """
+        stmt = select(
+            func.count(),
+            func.coalesce(func.sum(FingerprintRow.n_hashes), 0),
+            func.max(FingerprintRow.created_at),
+        ).where(FingerprintRow.version == version)
+        count, total, latest = self.session.execute(stmt).one()
+        if isinstance(latest, datetime):
+            latest = latest.isoformat()
+        return int(count), int(total), None if latest is None else str(latest)
+
     def iter_fingerprints(
         self, version: int
     ) -> Iterator[tuple[str, npt.NDArray[np.uint32], npt.NDArray[np.int32]]]:

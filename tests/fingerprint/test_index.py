@@ -53,9 +53,48 @@ def test_unknown_hash_matches_nothing() -> None:
     assert len(matches.query_idx) == 0
 
 
-def test_max_matches_caps_popular_hashes() -> None:
-    matches = _index().lookup(_arr(9), max_matches=1)
-    assert len(matches.query_idx) == 1
+def test_over_common_hashes_are_ignored() -> None:
+    index = _index()
+    assert len(index.lookup(_arr(9), max_matches=1).query_idx) == 0
+    assert len(index.lookup(_arr(9), max_matches=2).query_idx) == 2
+    assert len(index.lookup(_arr(7), max_matches=1).query_idx) == 1
+
+
+def test_over_common_hashes_do_not_depend_on_track_order() -> None:
+    items = [(f"t{i}", _arr(42, i + 1000), _times(1, 2)) for i in range(300)]
+    index = LibraryIndex.build(items)
+    assert len(index.lookup(_arr(42), max_matches=200).query_idx) == 0
+    rare = index.lookup(_arr(1250), max_matches=200)
+    assert rare.track_idx.tolist() == [250]
+
+
+def test_build_with_total_matches_build_without() -> None:
+    items = [
+        ("aaa", _arr(5, 9, 5), _times(10, 20, 30)),
+        ("bbb", _arr(9, 7), _times(100, 200)),
+        ("ccc", _arr(), _times()),
+        ("ddd", _arr(1, 9), _times(3, 4)),
+    ]
+    plain = LibraryIndex.build(items)
+    sized = LibraryIndex.build(items, total=7)
+    assert sized.hashes.tolist() == plain.hashes.tolist()
+    assert sized.times.tolist() == plain.times.tolist()
+    assert sized.track_idx.tolist() == plain.track_idx.tolist()
+    assert sized.track_hashes == plain.track_hashes
+    assert sized.max_track_frames == plain.max_track_frames
+    assert sized.hashes.dtype == plain.hashes.dtype
+    assert sized.times.dtype == plain.times.dtype
+    assert sized.track_idx.dtype == plain.track_idx.dtype
+
+
+@pytest.mark.parametrize("total", [0, 3, 50])
+def test_build_tolerates_a_wrong_total(total: int) -> None:
+    items = [("aaa", _arr(5, 9, 5), _times(10, 20, 30)), ("bbb", _arr(9, 7), _times(100, 200))]
+    plain = LibraryIndex.build(items)
+    sized = LibraryIndex.build(items, total=total)
+    assert sized.hashes.tolist() == plain.hashes.tolist()
+    assert sized.times.tolist() == plain.times.tolist()
+    assert sized.track_idx.tolist() == plain.track_idx.tolist()
 
 
 def test_track_hashes_and_max_frames() -> None:
@@ -95,6 +134,15 @@ def test_library_index_is_cached_until_the_fingerprint_count_changes(db: Databas
     second = get_library_index(db)
     assert second is not first
     assert len(second) == 2
+
+
+def test_replacing_a_fingerprint_reloads_the_index(db: Database) -> None:
+    db.upsert_fingerprint("aaa", _arr(5), _times(10), FINGERPRINT_VERSION)
+    first = get_library_index(db)
+    db.upsert_fingerprint("aaa", _arr(6, 7), _times(10, 20), FINGERPRINT_VERSION)
+    second = get_library_index(db)
+    assert second is not first
+    assert second.lookup(_arr(7), max_matches=5).track_t.tolist() == [20]
 
 
 def test_invalidate_forces_a_reload(db: Database) -> None:

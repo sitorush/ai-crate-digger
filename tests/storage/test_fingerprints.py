@@ -67,3 +67,28 @@ def test_deleting_a_track_deletes_its_fingerprint(db: Database) -> None:
 def test_deleting_a_track_without_fingerprint_still_works(db: Database) -> None:
     track_id = db.insert_track(Track(file_path=Path("/music/a.mp3"), file_hash="h1"))
     assert db.delete_track(track_id) is True
+
+
+def test_fingerprint_signature_of_empty_database(db: Database) -> None:
+    assert db.fingerprint_signature(1) == (0, 0, None)
+
+
+def test_fingerprint_signature_counts_and_sums(db: Database) -> None:
+    db.upsert_fingerprint("h1", _hashes(1, 2), _times(1, 2), version=1)
+    db.upsert_fingerprint("h2", _hashes(3), _times(3), version=1)
+    db.upsert_fingerprint("other", _hashes(4, 5, 6), _times(4, 5, 6), version=2)
+    count, total, latest = db.fingerprint_signature(1)
+    assert (count, total) == (2, 3)
+    assert isinstance(latest, str)
+
+
+def test_fingerprint_signature_changes_when_a_fingerprint_is_replaced(db: Database) -> None:
+    db.upsert_fingerprint("h1", _hashes(1, 2), _times(1, 2), version=1)
+    before = db.fingerprint_signature(1)
+    db.upsert_fingerprint("h1", _hashes(7, 8, 9), _times(7, 8, 9), version=1)
+    after = db.fingerprint_signature(1)
+    assert after[0] == before[0] == 1
+    assert after != before
+    assert after[2] is not None
+    assert before[2] is not None
+    assert after[2] >= before[2]
