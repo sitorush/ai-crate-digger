@@ -13,6 +13,7 @@ os.environ.setdefault("MKL_NUM_THREADS", "1")
 import click
 from rich.console import Console
 
+from ai_crate_digger.cli.mix import fingerprint, identify
 from ai_crate_digger.cli.playlist import playlist
 from ai_crate_digger.cli.scan import scan
 from ai_crate_digger.cli.search import search
@@ -33,6 +34,8 @@ main.add_command(scan)
 main.add_command(search)
 main.add_command(playlist)
 main.add_command(stats)
+main.add_command(fingerprint)
+main.add_command(identify)
 
 
 @click.command()
