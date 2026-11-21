@@ -32,6 +32,7 @@ class MatchParams:
     merge_tolerance_sec: float = 2.0
     max_gap_blocks: int = 1
     min_gap_sec: float = 10.0
+    slice_blocks: int = 12
 
 
 @dataclass(frozen=True)
@@ -110,21 +111,37 @@ def _votes_for_hypothesis(
     )
     if len(hs.hashes) == 0:
         return []
-    matches = index.lookup(hs.hashes, fp.max_matches_per_hash)
-    if len(matches.query_idx) == 0:
-        return []
 
-    offset = hs.anchor_t[matches.query_idx] - matches.track_t.astype(np.int64)
     pad = index.max_track_frames
     bin_width = params.offset_bin_frames
-    obin = (offset + pad) // bin_width
-    block = hs.source_t[matches.query_idx] // block_frames
-    n_obins = int(obin.max()) + 1
+    n_obins = (int(hs.anchor_t.max()) + pad) // bin_width + 1
     n_tracks = len(index)
-    key = (block * n_tracks + matches.track_idx.astype(np.int64)) * n_obins + obin
-    uniq, counts = np.unique(key, return_counts=True)
-    keep = counts >= params.min_votes
-    uniq, counts = uniq[keep], counts[keep]
+
+    # Vote in time slices so one hypothesis never holds every match for the mix.
+    # Votes are grouped per block and slices are whole blocks, so this is exact.
+    slice_id = (hs.source_t // block_frames) // params.slice_blocks
+    order = np.argsort(slice_id, kind="stable")
+    bounds = np.flatnonzero(np.diff(slice_id[order])) + 1
+    uniq_parts: list[npt.NDArray[np.int64]] = []
+    count_parts: list[npt.NDArray[np.int64]] = []
+    for part in np.split(order, bounds):
+        matches = index.lookup(hs.hashes[part], fp.max_matches_per_hash)
+        if len(matches.query_idx) == 0:
+            continue
+        q = part[matches.query_idx]
+        offset = hs.anchor_t[q] - matches.track_t.astype(np.int64)
+        obin = (offset + pad) // bin_width
+        block = hs.source_t[q] // block_frames
+        key = (block * n_tracks + matches.track_idx.astype(np.int64)) * n_obins + obin
+        del matches, q, offset, obin, block
+        part_uniq, part_counts = np.unique(key, return_counts=True)
+        keep = part_counts >= params.min_votes
+        uniq_parts.append(part_uniq[keep])
+        count_parts.append(part_counts[keep].astype(np.int64))
+    if not uniq_parts:
+        return []
+    uniq = np.concatenate(uniq_parts)
+    counts = np.concatenate(count_parts)
     if len(uniq) == 0:
         return []
 

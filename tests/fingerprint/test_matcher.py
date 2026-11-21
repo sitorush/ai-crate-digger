@@ -130,3 +130,22 @@ def test_progress_reaches_one(index: LibraryIndex, tracks: dict[str, Audio]) -> 
     identify_mix(index, extract_peaks(mix, FP), FP, MP, on_progress=seen.append)
     assert seen == sorted(seen)
     assert seen[-1] == pytest.approx(1.0)
+
+
+def test_time_slicing_does_not_change_results(
+    index: LibraryIndex, tracks: dict[str, Audio]
+) -> None:
+    mix = place(tracks["t0"][: 30 * SR], 0, 60) + place(tracks["t5"][: 30 * SR], 25, 60)
+    peaks = extract_peaks(mix, FP)
+    default = identify_mix(index, peaks, FP, MP)
+    sliced = identify_mix(index, peaks, FP, MatchParams(slice_blocks=1))
+
+    def summary(result: MixResult) -> list[tuple[str, float, float, str, float]]:
+        return [
+            (s.track_hash, s.start_sec, s.end_sec, s.confidence_band, s.tempo_shift_pct)
+            for s in result.segments
+        ]
+
+    assert [s.track_hash for s in default.segments] == ["t0", "t5"]
+    assert summary(sliced) == summary(default)
+    assert sliced == default
