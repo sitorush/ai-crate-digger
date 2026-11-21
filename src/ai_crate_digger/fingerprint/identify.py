@@ -55,8 +55,8 @@ def identify_mix_file(
     del audio
 
     db = Database(settings.db_path)
-    db.init()
     try:
+        db.init()
         index = get_library_index(db)
     finally:
         db.close()

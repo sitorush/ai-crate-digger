@@ -188,6 +188,31 @@ with no false matches. Differences from the first draft of this spec:
 Confidence bands (support of 0.12 high, 0.05 medium, 0.02 low) come from
 synthetic audio and must be re-tuned with the benchmark on real mixes.
 
+Review fixes:
+
+- Matching processes the mix in 60 s slices (12 blocks) per hypothesis, so
+  memory no longer grows with mix length. Results are identical.
+- Over-common hashes (more than 200 index entries) are ignored rather than
+  truncated, so results do not depend on the order tracks were added.
+- The index cache key includes a content signature (count, total hashes,
+  latest `created_at`), so replaced fingerprints rebuild the index.
+- The index is built into preallocated arrays and sorted one array at a time;
+  the safety cap is 200M entries (about 25 bytes per entry at peak, ~5 GB).
+- A crashed worker pool reports every unstored track as failed instead of
+  counting it as indexed, and errors cancel queued work.
+
+Known limitations (deliberately deferred):
+
+1. Vote binning can split a true alignment across adjacent 4-frame offset
+   bins, under-counting support by up to half in unlucky blocks. This is the
+   first thing to tune if the benchmark shows missed tracks.
+2. The same recording stored twice (two formats, or extended mix vs radio
+   edit) can fill both per-block slots and crowd out a different track.
+3. Unmatched spans are computed before the `min_confidence` filter, so hidden
+   low-confidence segments leave spans that appear in neither list.
+4. Decoding an hour-long stereo file with `librosa.load` decodes at the native
+   rate first, about 3-4 GB peak.
+
 ## Open questions
 
 - Actual RAM and run time for the full library and an hour-long mix (resolved

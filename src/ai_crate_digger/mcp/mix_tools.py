@@ -123,8 +123,8 @@ def _index_fingerprints(settings: Settings, args: dict[str, Any]) -> list[TextCo
 
     def work(progress: ProgressFn) -> IndexReport:
         db = Database(settings.db_path)
-        db.init()
         try:
+            db.init()
             return index_library(
                 db,
                 force=force,

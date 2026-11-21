@@ -70,6 +70,8 @@ def index_library(
     todo = [(t.file_hash, str(t.file_path)) for t in tracks if t.file_hash not in done]
     skipped = len(tracks) - len(todo)
     failed: list[tuple[str, str]] = []
+    stored: set[str] = set()
+    errored: set[str] = set()
     finished = 0
 
     def store(file_hash: str, path: str, result: Fingerprint | Exception) -> None:
@@ -77,8 +79,10 @@ def index_library(
         if isinstance(result, Exception):
             logger.warning("Fingerprinting failed for %s: %s", path, result)
             failed.append((path, str(result)))
+            errored.add(file_hash)
         else:
             db.upsert_fingerprint(file_hash, result[0], result[1], FINGERPRINT_VERSION)
+            stored.add(file_hash)
         finished += 1
         if on_progress:
             on_progress(finished, len(todo))
@@ -86,24 +90,27 @@ def index_library(
     if workers is None:
         workers = get_settings().max_workers or max(1, (os.cpu_count() or 2) - 1)
 
-    if workers <= 1 or len(todo) <= 1:
+    pooled = not (workers <= 1 or len(todo) <= 1)
+    if pooled:
+        _run_pool(todo, workers, store)
+    else:
         for file_hash, path in todo:
             try:
                 store(file_hash, path, fingerprint_file(path))
             except Exception as exc:
                 store(file_hash, path, exc)
-    else:
-        _run_pool(todo, workers, store, failed)
 
+    # Anything neither stored nor reported (a crashed pool) still counts as failed.
+    reason = "worker pool crashed" if pooled else "not completed"
+    failed.extend((path, reason) for h, path in todo if h not in stored and h not in errored)
     invalidate_index_cache()
-    return IndexReport(indexed=len(todo) - len(failed), skipped=skipped, failed=failed)
+    return IndexReport(indexed=len(stored), skipped=skipped, failed=failed)
 
 
 def _run_pool(
     todo: list[tuple[str, str]],
     workers: int,
     store: Callable[[str, str, Fingerprint | Exception], None],
-    failed: list[tuple[str, str]],
 ) -> None:
     context = multiprocessing.get_context("spawn")
     with ProcessPoolExecutor(
@@ -122,8 +129,7 @@ def _run_pool(
                 store(file_hash, path, result)
         except BrokenProcessPool:
             logger.error("Fingerprint worker pool crashed. Re-run to resume.")
-            failed.extend(
-                (path, "worker pool crashed")
-                for fut, (_, path) in futures.items()
-                if not fut.done()
-            )
+        except BaseException:
+            # Do not wait for every queued track on a DB error or interrupt.
+            pool.shutdown(wait=True, cancel_futures=True)
+            raise

@@ -3,8 +3,10 @@
 from pathlib import Path
 
 import numpy as np
+import pytest
 
 from ai_crate_digger.core.models import Track
+from ai_crate_digger.fingerprint import indexer
 from ai_crate_digger.fingerprint.index import get_library_index
 from ai_crate_digger.fingerprint.indexer import fingerprint_audio, index_library
 from ai_crate_digger.fingerprint.params import FINGERPRINT_VERSION
@@ -61,3 +63,28 @@ def test_reindexing_invalidates_the_cached_library_index(library: Library) -> No
 
     index_library(library.db, workers=1, force=True)
     assert get_library_index(library.db) is not first
+
+
+def test_crashed_pool_reports_unstored_tracks_as_failed(
+    library: Library, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    def run_nothing(*args: object, **kwargs: object) -> None:
+        return None
+
+    monkeypatch.setattr(indexer, "_run_pool", run_nothing)
+    report = index_library(library.db, workers=2)
+    assert report.indexed == 0
+    assert len(report.failed) == 4
+    assert {msg for _, msg in report.failed} == {"worker pool crashed"}
+    assert library.db.count_fingerprints(FINGERPRINT_VERSION) == 0
+
+
+def test_storage_error_in_the_pool_propagates(
+    library: Library, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    def broken_upsert(*args: object, **kwargs: object) -> None:
+        raise RuntimeError("disk full")
+
+    monkeypatch.setattr(library.db, "upsert_fingerprint", broken_upsert)
+    with pytest.raises(RuntimeError, match="disk full"):
+        index_library(library.db, workers=2)

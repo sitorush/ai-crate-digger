@@ -33,8 +33,8 @@ def fingerprint(force: bool, workers: int | None) -> None:
     """Fingerprint library tracks so mixes can be matched against them."""
     settings = get_settings()
     db = Database(settings.db_path)
-    db.init()
     try:
+        db.init()
         with Progress(
             SpinnerColumn(),
             TextColumn("[progress.description]{task.description}"),
@@ -103,8 +103,8 @@ def identify(path: str | None, min_confidence: str) -> None:
             raise click.ClickException(str(exc)) from exc
 
     db = Database(settings.db_path)
-    db.init()
     try:
+        db.init()
         band = cast("Literal['low', 'medium', 'high']", min_confidence)
         summary = describe_result(result, db, band)
     finally:
