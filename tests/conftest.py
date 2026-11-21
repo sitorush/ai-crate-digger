@@ -9,6 +9,7 @@ from pathlib import Path
 import pytest
 
 from ai_crate_digger.core.models import Track
+from tests.fingerprint.library import Library, build_library
 
 
 @pytest.fixture
@@ -55,3 +56,11 @@ def sample_track() -> Track:
         energy=0.8,
         danceability=0.7,
     )
+
+
+@pytest.fixture
+def library(tmp_path: Path) -> Iterator[Library]:
+    """Small library of synthetic WAV tracks with a catalogue database."""
+    lib = build_library(tmp_path)
+    yield lib
+    lib.db.close()
