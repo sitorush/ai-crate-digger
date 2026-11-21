@@ -17,6 +17,8 @@
 - **Verify commands:** `uv run pytest <path> -q --no-cov` for focused runs. The repo's default `addopts` adds a coverage gate that fails partial runs.
 - **Deviations from the spec** (found while prototyping) are listed in the amendments patch in Task 13. The important ones: no `fingerprinted_at` column on `tracks` (a new table is the only migration-free option), `get_job_status` replaces `get_mix_result`, and 5 s blocks replace 10 s windows.
 - **Not in scope:** live microphone identification, Beatport/ZipDJ lookups.
+- **Commit hook:** Tom's global Claude hook runs `mypy .` (tests included, strict) before every `git commit`. All test code must be fully annotated; the plan's tests are. Commit `3487649` annotated the pre-existing tests so the hook passes. Do not bypass the hook.
+- **Progress:** Task 0 done (branch `feat/mix-identification`). Prep commit `3487649` and Task 1 (`21caa66`) are done; Task 1's test patch below was applied with `monkeypatch: pytest.MonkeyPatch` annotations. Start at Task 2.
 
 ## File structure
 
@@ -272,13 +274,15 @@ def make_track(seed: int, seconds: float) -> Audio:
         out[start:end] += note[: end - start].astype(np.float32)
         t += rng.uniform(0.06, 0.2)
     out += rng.normal(0, 0.003, len(out)).astype(np.float32)
-    return (out / np.abs(out).max() * 0.8).astype(np.float32)
+    normalised: Audio = (out / np.abs(out).max() * 0.8).astype(np.float32)
+    return normalised
 
 
 def stretch_pitch(audio: Audio, speed: float) -> Audio:
     """Play ``audio`` ``speed`` times faster with pitch following (vinyl style)."""
     positions = np.arange(int(len(audio) / speed)) * speed
-    return np.interp(positions, np.arange(len(audio)), audio).astype(np.float32)
+    shifted: Audio = np.interp(positions, np.arange(len(audio)), audio).astype(np.float32)
+    return shifted
 
 
 def stretch_keylock(audio: Audio, speed: float) -> Audio:
@@ -1770,17 +1774,15 @@ def build_library(root: Path, n_tracks: int = 4, seconds: float = 40) -> Library
 ```diff
 --- a/tests/conftest.py
 +++ b/tests/conftest.py
-@@ -8,7 +8,9 @@
- 
+@@ -9,6 +9,7 @@
  import pytest
  
+ from ai_crate_digger.core.models import Track
 +from tests.fingerprint.library import Library, build_library
  
-+
+ 
  @pytest.fixture
- def tmp_dir() -> Iterator[Path]:
-     """Create temporary directory for tests."""
-@@ -55,3 +57,11 @@
+@@ -55,3 +56,11 @@
          energy=0.8,
          danceability=0.7,
      )
@@ -2096,18 +2098,18 @@ from pathlib import Path
 import pytest
 
 from ai_crate_digger.core.models import Track
-from ai_crate_digger.fingerprint.matcher import MixResult, MixSegment
+from ai_crate_digger.fingerprint.matcher import Band, MixResult, MixSegment
 from ai_crate_digger.fingerprint.report import describe_result, format_time, playlist_hashes
 from ai_crate_digger.storage import Database
 
 
-def _segment(start: float, end: float, track: str, band: str) -> MixSegment:
+def _segment(start: float, end: float, track: str, band: Band) -> MixSegment:
     return MixSegment(
         start_sec=start,
         end_sec=end,
         track_hash=track,
         confidence=0.2,
-        confidence_band=band,  # type: ignore[arg-type]
+        confidence_band=band,
         tempo_shift_pct=1.5,
         mode="pitch",
     )
@@ -2772,6 +2774,7 @@ async def test_server_lists_and_routes_the_mix_tools(
         listed = await server.request_handlers[types.ListToolsRequest](
             types.ListToolsRequest(method="tools/list")
         )
+        assert isinstance(listed.root, types.ListToolsResult)
         names = {tool.name for tool in listed.root.tools}
         assert names >= MIX_TOOL_NAMES
 
@@ -2783,7 +2786,10 @@ async def test_server_lists_and_routes_the_mix_tools(
                 ),
             )
         )
-        assert "Unknown job_id" in called.root.content[0].text
+        assert isinstance(called.root, types.CallToolResult)
+        content = called.root.content[0]
+        assert isinstance(content, types.TextContent)
+        assert "Unknown job_id" in content.text
     finally:
         get_settings.cache_clear()
 ```
