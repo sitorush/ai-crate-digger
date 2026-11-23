@@ -67,6 +67,10 @@ Quit and reopen. You should see "ai-crate-digger" in the MCP servers list (hamme
 | `get_stats` | Library statistics |
 | `get_track_details` | Full metadata for a specific track |
 | `export_playlist` | Export to M3U or Rekordbox XML |
+| `index_fingerprints` | Fingerprint tracks so mixes can be identified (runs in the background) |
+| `identify_mix` | Find which library tracks were played in a recording (runs in the background) |
+| `get_job_status` | Progress and results for `index_fingerprints` and `identify_mix` |
+| `build_playlist_from_mix` | Export the tracks found in a mix as a playlist, in the order played |
 | `scan_library` | Scan a small folder for new tracks (new additions only -- see note below) |
 | `reset_database` | Clear all tracks (with confirmation) |
 | `clean_orphans` | Remove tracks for deleted files |
@@ -78,6 +82,10 @@ Quit and reopen. You should see "ai-crate-digger" in the MCP servers list (hamme
 - "What's the most common key in my library?"
 - "Find me 10 tracks that would mix well after Amelie Lens - Exhale"
 - "Make a 90-minute gym playlist that builds from 124 to 132 BPM"
+- "Identify the tracks in my latest recording and build a playlist from them"
+- "Identify ~/Music/mixes/friday-set.mp3 and show me anything you were not sure about"
+
+Identifying a long mix takes several minutes, so Claude starts a background job and checks on it. Run `crate fingerprint` once from the terminal first. See [mix identification](./mcp-tools.md#mix-identification-tools).
 
 ## Scanning: CLI for Full Library, Claude for New Additions
 

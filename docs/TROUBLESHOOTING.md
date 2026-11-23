@@ -115,6 +115,51 @@ crate scan ~/Music/Techno
 crate scan ~/Music/DnB
 ```
 
+## Mix Identification
+
+### "The fingerprint index is empty"
+
+**Cause:** No tracks have been fingerprinted yet.
+
+**Solution:**
+```bash
+crate fingerprint
+```
+
+Only tracks without a fingerprint are processed, so re-running it is cheap. Run it again after scanning new tracks.
+
+### "...over the safety limit" / index too large
+
+**Cause:** Matching loads every fingerprint into memory. The index is capped at about 200 million hashes (roughly 600 hours of audio, about 5 GB of RAM while loading) to avoid exhausting memory.
+
+**Solution:** Identify against a smaller library (use a separate database with `CRATE_DB_PATH`), or ask for the hash density to be lowered in `FingerprintParams`, which needs `FINGERPRINT_VERSION` bumped and `crate fingerprint --force` re-run.
+
+### Identifying a long mix is slow or uses a lot of memory
+
+**Cause:** A 99-minute stereo MP3 took about 7 minutes and peaked near 7.5 GB of RAM in one test. Decoding the recording and loading the index both need memory.
+
+**Solution:** Close other heavy apps, or split the recording into shorter files. Over MCP the call returns a `job_id` at once; poll `get_job_status` until it finishes. Jobs are forgotten if the MCP server restarts, so re-run `identify_mix` if that happens.
+
+### A track I played was not found
+
+Check, in order:
+1. Is the track in your library and fingerprinted? `crate stats` shows the library; run `crate fingerprint`.
+2. Try `crate identify <file> --min-confidence low`. Weak matches are hidden by default.
+3. Short samples, heavy looping, and different edits of the same song (extended versus radio) can match partly or not at all.
+4. A very large tempo change (over 8%) is outside the search range. Widen `CRATE_MIX_SPEED_RANGE`.
+
+### The same track appears several times in a row
+
+**Cause:** The timeline lists every matched stretch, and stretches break where the match is weaker. They are the same track; read them as one run.
+
+### Lots of "libmpg123 ... No extra frame text" lines
+
+**Cause:** Some MP3 files have unusual ID3 tags. The warnings come from the audio decoder and are harmless.
+
+### Fingerprinting stopped part way
+
+**Solution:** Run `crate fingerprint` again. Finished tracks are skipped, so it resumes where it stopped. Tracks that cannot be decoded are listed at the end of the run.
+
 ## Known Quirks
 
 ### 1. Harmonic Mixing Uses Camelot Wheel

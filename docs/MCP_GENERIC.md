@@ -83,6 +83,10 @@ Once connected, any MCP app can call these tools:
 | `get_stats` | Library statistics grouped by tag, artist, or key |
 | `get_track_details` | Full metadata for a specific track |
 | `export_playlist` | Export an existing playlist to file |
+| `index_fingerprints` | Fingerprint tracks so mixes can be identified (background job) |
+| `identify_mix` | Find which library tracks were played in a recording (background job) |
+| `get_job_status` | Progress and results for the two background jobs above |
+| `build_playlist_from_mix` | Export the tracks found in a mix, in the order played |
 | `scan_library` | Scan a directory for new tracks |
 | `reset_database` | Clear the database (with confirmation) |
 | `clean_orphans` | Remove tracks for files that no longer exist |

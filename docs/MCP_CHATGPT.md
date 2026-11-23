@@ -71,6 +71,7 @@ Quit and reopen. The ai-crate-digger tools should appear in the tools menu.
 - "How many tracks do I have in each key?"
 - "Find tracks similar to Peggy Gou  -- I want that Korean disco feel"
 - "Export a tech house playlist to my Desktop in Rekordbox format"
+- "Identify the tracks in my latest recording and build a playlist from them"
 
 ## Differences vs Claude Desktop
 

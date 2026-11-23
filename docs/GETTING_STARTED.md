@@ -68,7 +68,22 @@ crate playlist --tags garage --bpm-min 130 --bpm-max 134 --duration 60
 crate playlist --tags techno --output ~/Desktop/set.xml --format rekordbox
 ```
 
-## 6. Connect to an LLM (Optional)
+## 6. Identify Tracks in a Recorded Mix (Optional)
+
+Recorded a set and lost the tracklist? Fingerprint your library once, then match the recording against it:
+
+```bash
+# One-off (a few minutes for ~7,000 tracks); afterwards only new tracks are processed
+crate fingerprint
+
+# Identify a recording, or the newest one in ~/Music/mixes
+crate identify ~/Music/mixes/friday-set.mp3
+crate identify
+```
+
+A long mix takes several minutes and a few GB of RAM. Add `--min-confidence low` to see weaker matches. Run `crate fingerprint` again after adding new tracks to your library.
+
+## 7. Connect to an LLM (Optional)
 
 Control your library through natural language:
 
@@ -87,6 +102,8 @@ Control your library through natural language:
 | `crate search --query "..."` | Semantic search |
 | `crate playlist --tags X` | Generate playlist |
 | `crate stats` | Library statistics |
+| `crate fingerprint` | Fingerprint tracks for mix identification |
+| `crate identify [file]` | Identify tracks in a recorded mix |
 | `crate clean` | Remove orphaned tracks |
 | `crate reset` | Clear entire database |
 | `crate mcp-server` | Start MCP server for LLM apps |
