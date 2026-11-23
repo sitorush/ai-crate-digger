@@ -11,7 +11,7 @@ from ai_crate_digger.storage import Database
 
 
 @pytest.fixture
-def db_with_playlist_tracks(tmp_path):
+def db_with_playlist_tracks(tmp_path: Path) -> Database:
     """Create database with tracks for playlist validation."""
     db = Database(tmp_path / "test.db")
     db.init()
@@ -76,7 +76,7 @@ def db_with_playlist_tracks(tmp_path):
 
 
 @pytest.mark.asyncio
-async def test_validate_playlist_order_valid(db_with_playlist_tracks):
+async def test_validate_playlist_order_valid(db_with_playlist_tracks: Database) -> None:
     """Test validation passes for clean playlist."""
     args = {"hashes": ["hash001", "hash002"]}
     result = await _validate_playlist_order(db_with_playlist_tracks, args)
@@ -90,7 +90,7 @@ async def test_validate_playlist_order_valid(db_with_playlist_tracks):
 
 
 @pytest.mark.asyncio
-async def test_validate_exact_duplicates(db_with_playlist_tracks):
+async def test_validate_exact_duplicates(db_with_playlist_tracks: Database) -> None:
     """Test exact duplicate detection."""
     args = {"hashes": ["hash001", "hash002", "hash001"]}
     result = await _validate_playlist_order(db_with_playlist_tracks, args)
@@ -103,7 +103,7 @@ async def test_validate_exact_duplicates(db_with_playlist_tracks):
 
 
 @pytest.mark.asyncio
-async def test_validate_same_song_duplicates(db_with_playlist_tracks):
+async def test_validate_same_song_duplicates(db_with_playlist_tracks: Database) -> None:
     """Test same-song duplicate detection (different remixes)."""
     args = {"hashes": ["hash004", "hash005"]}
     result = await _validate_playlist_order(db_with_playlist_tracks, args)
@@ -117,7 +117,7 @@ async def test_validate_same_song_duplicates(db_with_playlist_tracks):
 
 
 @pytest.mark.asyncio
-async def test_validate_bpm_jump(db_with_playlist_tracks):
+async def test_validate_bpm_jump(db_with_playlist_tracks: Database) -> None:
     """Test BPM jump detection (threshold > 2.0)."""
     args = {"hashes": ["hash001", "hash003"]}  # 128 -> 135 BPM
     result = await _validate_playlist_order(db_with_playlist_tracks, args)
@@ -133,7 +133,7 @@ async def test_validate_bpm_jump(db_with_playlist_tracks):
 
 
 @pytest.mark.asyncio
-async def test_validate_key_clash(db_with_playlist_tracks):
+async def test_validate_key_clash(db_with_playlist_tracks: Database) -> None:
     """Test key clash detection (distance 3-6 are errors)."""
     args = {"hashes": ["hash001", "hash003"]}  # 8A -> 12A (distance 4)
     result = await _validate_playlist_order(db_with_playlist_tracks, args)
@@ -147,7 +147,7 @@ async def test_validate_key_clash(db_with_playlist_tracks):
 
 
 @pytest.mark.asyncio
-async def test_validate_tag_mismatch(db_with_playlist_tracks):
+async def test_validate_tag_mismatch(db_with_playlist_tracks: Database) -> None:
     """Test tag mismatch detection (zero overlap)."""
     args = {"hashes": ["hash001", "hash003"]}  # House -> Techno
     result = await _validate_playlist_order(db_with_playlist_tracks, args)
@@ -160,7 +160,7 @@ async def test_validate_tag_mismatch(db_with_playlist_tracks):
 
 
 @pytest.mark.asyncio
-async def test_validate_total_duration(db_with_playlist_tracks):
+async def test_validate_total_duration(db_with_playlist_tracks: Database) -> None:
     """Test total duration calculation."""
     args = {"hashes": ["hash001", "hash002"]}  # 180s + 200s = 380s = 6.33min
     result = await _validate_playlist_order(db_with_playlist_tracks, args)
@@ -170,7 +170,7 @@ async def test_validate_total_duration(db_with_playlist_tracks):
 
 
 @pytest.mark.asyncio
-async def test_validate_energy_shift_allowed(tmp_path):
+async def test_validate_energy_shift_allowed(tmp_path: Path) -> None:
     """Test distance 2 energy shift is allowed (no flag)."""
     db = Database(tmp_path / "test.db")
     db.init()
@@ -211,7 +211,7 @@ async def test_validate_energy_shift_allowed(tmp_path):
 
 
 @pytest.mark.asyncio
-async def test_validate_diagonal_allowed(tmp_path):
+async def test_validate_diagonal_allowed(tmp_path: Path) -> None:
     """Test diagonal moves (number +/-1 with A/B flip) are allowed."""
     db = Database(tmp_path / "test.db")
     db.init()
@@ -252,7 +252,7 @@ async def test_validate_diagonal_allowed(tmp_path):
 
 
 @pytest.mark.asyncio
-async def test_validate_semitone_shift_info(tmp_path):
+async def test_validate_semitone_shift_info(tmp_path: Path) -> None:
     """Test distance 7 semitone shift flagged as info, not error."""
     db = Database(tmp_path / "test.db")
     db.init()
@@ -295,7 +295,7 @@ async def test_validate_semitone_shift_info(tmp_path):
 
 
 @pytest.mark.asyncio
-async def test_validate_warnings_dont_affect_valid(tmp_path):
+async def test_validate_warnings_dont_affect_valid(tmp_path: Path) -> None:
     """Test that warnings (BPM jump, tag mismatch) don't make valid=False."""
     db = Database(tmp_path / "test.db")
     db.init()

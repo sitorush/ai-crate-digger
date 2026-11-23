@@ -4,7 +4,7 @@ from ai_crate_digger.core.models import Track
 from ai_crate_digger.mcp.tools import _compact_track, _sort_candidates, _strip_remix_markers
 
 
-def test_strip_remix_markers():
+def test_strip_remix_markers() -> None:
     """Test stripping parentheses and brackets from titles."""
     assert _strip_remix_markers("Track Name (Remix)") == "track name"
     assert _strip_remix_markers("Track [VIP]") == "track"
@@ -13,7 +13,7 @@ def test_strip_remix_markers():
     assert _strip_remix_markers("Multiple (Remix) [VIP] (Edit)") == "multiple"
 
 
-def test_compact_track(sample_track):
+def test_compact_track(sample_track: Track) -> None:
     """Test compact track representation."""
     result = _compact_track(sample_track)
     assert result == {
@@ -24,7 +24,7 @@ def test_compact_track(sample_track):
     }
 
 
-def test_sort_candidates_random():
+def test_sort_candidates_random() -> None:
     """Test random sorting."""
     tracks = [
         Track(file_path="/a.mp3", file_hash="aaa", bpm=120.0),
@@ -37,7 +37,7 @@ def test_sort_candidates_random():
     assert {t.file_hash for t in result} == {"aaa", "bbb", "ccc"}
 
 
-def test_sort_candidates_bpm_asc():
+def test_sort_candidates_bpm_asc() -> None:
     """Test BPM ascending sort."""
     tracks = [
         Track(file_path="/a.mp3", file_hash="aaa", bpm=130.0),
@@ -48,7 +48,7 @@ def test_sort_candidates_bpm_asc():
     assert [t.bpm for t in result] == [120.0, 125.0, 130.0]
 
 
-def test_sort_candidates_bpm_desc():
+def test_sort_candidates_bpm_desc() -> None:
     """Test BPM descending sort."""
     tracks = [
         Track(file_path="/a.mp3", file_hash="aaa", bpm=120.0),
@@ -59,7 +59,7 @@ def test_sort_candidates_bpm_desc():
     assert [t.bpm for t in result] == [130.0, 125.0, 120.0]
 
 
-def test_sort_candidates_energy_desc():
+def test_sort_candidates_energy_desc() -> None:
     """Test energy descending sort."""
     tracks = [
         Track(file_path="/a.mp3", file_hash="aaa", energy=0.5),
@@ -70,7 +70,7 @@ def test_sort_candidates_energy_desc():
     assert [t.energy for t in result] == [0.9, 0.7, 0.5]
 
 
-def test_sort_candidates_danceability_desc():
+def test_sort_candidates_danceability_desc() -> None:
     """Test danceability descending sort."""
     tracks = [
         Track(file_path="/a.mp3", file_hash="aaa", danceability=0.6),

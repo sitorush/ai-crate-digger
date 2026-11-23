@@ -2,6 +2,8 @@
 
 from pathlib import Path
 
+import pytest
+
 from ai_crate_digger.core.config import Settings, get_settings
 
 
@@ -15,7 +17,7 @@ class TestSettings:
         assert settings.vector_path == Path.home() / ".ai-crate-digger" / ".chroma"
         assert settings.max_workers is None  # Auto-detect
 
-    def test_settings_from_env(self, monkeypatch) -> None:
+    def test_settings_from_env(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Settings can be overridden via environment."""
         monkeypatch.setenv("CRATE_DB_PATH", "/custom/path.db")
         settings = Settings()
@@ -32,10 +34,26 @@ class TestSettings:
         settings = Settings()
         assert settings.output_path == Path.home() / "Downloads"
 
-    def test_settings_custom_output_path(self, monkeypatch, tmp_path) -> None:
+    def test_settings_custom_output_path(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
         """Test custom output_path via env var."""
         get_settings.cache_clear()  # Clear any cached settings
 
         monkeypatch.setenv("CRATE_OUTPUT_PATH", str(tmp_path))
         settings = Settings()
         assert settings.output_path == tmp_path
+
+    def test_mix_identification_defaults(self) -> None:
+        """Mix identification settings have defaults."""
+        settings = Settings()
+        assert settings.inbox_path == Path.home() / "Music" / "mixes"
+        assert settings.mix_min_seconds == 30.0
+        assert settings.mix_speed_range == 0.08
+        assert settings.mix_speed_step == 0.01
+        assert settings.mix_high_support > settings.mix_medium_support > settings.mix_low_support
+
+    def test_inbox_path_from_env(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """The inbox folder can be overridden via environment."""
+        monkeypatch.setenv("CRATE_INBOX_PATH", "/recordings")
+        assert Settings().inbox_path == Path("/recordings")

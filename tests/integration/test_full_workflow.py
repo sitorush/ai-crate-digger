@@ -2,6 +2,7 @@
 
 import struct
 import wave
+from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
@@ -40,7 +41,7 @@ def music_library(tmp_dir: Path) -> Path:
 
 
 @pytest.fixture
-def test_db(tmp_dir: Path) -> Database:
+def test_db(tmp_dir: Path) -> Iterator[Database]:
     """Create test database."""
     db = Database(tmp_dir / "test.db")
     db.init()

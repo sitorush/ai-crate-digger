@@ -11,7 +11,7 @@ from ai_crate_digger.storage import Database
 
 
 @pytest.fixture
-def db_with_workflow_tracks(tmp_path):
+def db_with_workflow_tracks(tmp_path: Path) -> Database:
     """Create database with diverse tracks for workflow testing."""
     db = Database(tmp_path / "test.db")
     db.init()
@@ -76,7 +76,9 @@ def db_with_workflow_tracks(tmp_path):
 
 
 @pytest.mark.asyncio
-async def test_ai_workflow_get_candidates_to_export(db_with_workflow_tracks, tmp_path):
+async def test_ai_workflow_get_candidates_to_export(
+    db_with_workflow_tracks: Database, tmp_path: Path
+) -> None:
     """Test full AI workflow: get_candidate_pool → validate → build."""
 
     # Step 1: Get candidate pool filtered by tags and BPM
@@ -129,7 +131,9 @@ async def test_ai_workflow_get_candidates_to_export(db_with_workflow_tracks, tmp
 
 
 @pytest.mark.asyncio
-async def test_ai_workflow_with_incompatible_tracks(db_with_workflow_tracks, tmp_path):
+async def test_ai_workflow_with_incompatible_tracks(
+    db_with_workflow_tracks: Database, tmp_path: Path
+) -> None:
     """Test workflow catches incompatible tracks."""
 
     # Step 1: Get mixed tracks (house + techno)

@@ -13,6 +13,7 @@ from mcp.types import TextContent, Tool
 
 from ai_crate_digger.core.config import Settings, get_settings
 from ai_crate_digger.core.models import Track
+from ai_crate_digger.mcp.mix_tools import MIX_TOOL_NAMES, call_mix_tool, mix_tool_definitions
 from ai_crate_digger.playlist import (
     PlaylistOptions,
     TrackFilter,
@@ -773,6 +774,7 @@ def register_tools(server: Server) -> None:
                     "required": ["name", "hashes"],
                 },
             ),
+            *mix_tool_definitions(),
         ]
 
     @server.call_tool()  # type: ignore[untyped-decorator]
@@ -821,6 +823,8 @@ def register_tools(server: Server) -> None:
                 return await _validate_playlist_order(db, arguments)
             if name == "build_playlist":
                 return await _build_playlist(db, arguments)
+            if name in MIX_TOOL_NAMES:
+                return await call_mix_tool(name, db, settings, arguments, _build_playlist)
             return [TextContent(type="text", text=f"Unknown tool: {name}")]
         finally:
             db.close()

@@ -84,6 +84,23 @@ crate playlist --tags techno --duration 60 --output ~/Desktop/set.m3u
 crate playlist --tags techno --output ~/Desktop/set.xml --format rekordbox
 ```
 
+## Identify Tracks in a Recorded Mix
+
+Recorded a set and forgot the tracklist? Fingerprint your library once, then match the recording against it.
+
+```bash
+# Fingerprint your library (only new tracks after the first run)
+crate fingerprint
+
+# Identify what was played in a recording
+crate identify ~/Music/mixes/friday-set.mp3
+
+# Or use the newest recording in ~/Music/mixes
+crate identify
+```
+
+It tolerates tempo changes of up to about 8%, noise and overlapping transitions, and lists spans it could not match (usually tracks that are not in your library). From an AI assistant, ask it to identify your latest recording and build a playlist from it. See [MCP tools](docs/mcp-tools.md#mix-identification-tools).
+
 ## Connect to an AI Assistant
 
 Ask your AI assistant to manage your music library.
@@ -177,6 +194,7 @@ crate playlist --tags techno --output ~/Desktop/set.xml --format rekordbox
 | `CRATE_DB_PATH` | `~/.ai-crate-digger/catalog.db` | SQLite database path |
 | `CRATE_VECTOR_PATH` | `~/.ai-crate-digger/.chroma` | ChromaDB vector store path |
 | `CRATE_OUTPUT_PATH` | `~/Downloads` | Default playlist export directory |
+| `CRATE_INBOX_PATH` | `~/Music/mixes` | Folder `crate identify` and `identify_mix` use for the newest recording |
 
 ## Development
 

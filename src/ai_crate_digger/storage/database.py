@@ -4,18 +4,24 @@ from __future__ import annotations
 
 import contextlib
 import json
+from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
+import numpy as np
+import numpy.typing as npt
 from sqlalchemy import (
     DateTime,
     Float,
     Index,
     Integer,
+    LargeBinary,
     String,
     Text,
     create_engine,
+    delete,
+    func,
     select,
 )
 from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column, sessionmaker
@@ -93,6 +99,18 @@ class TrackRow(Base):
         Index("ix_tracks_bpm_key", "bpm", "key"),
         Index("ix_tracks_energy_danceability", "energy", "danceability"),
     )
+
+
+class FingerprintRow(Base):
+    """Packed audio fingerprint for one track (hashes then anchor times)."""
+
+    __tablename__ = "fingerprints"
+
+    track_hash: Mapped[str] = mapped_column(String(64), primary_key=True)
+    version: Mapped[int] = mapped_column(Integer, nullable=False)
+    n_hashes: Mapped[int] = mapped_column(Integer, nullable=False)
+    blob: Mapped[bytes] = mapped_column(LargeBinary, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(tz=UTC))
 
 
 def _row_to_track(row: TrackRow) -> Track:
@@ -424,6 +442,85 @@ class Database:
         row = self.session.execute(stmt).scalar_one_or_none()
         if row is None:
             return False
+        self.session.execute(
+            delete(FingerprintRow).where(FingerprintRow.track_hash == row.file_hash)
+        )
         self.session.delete(row)
         self.session.commit()
         return True
+
+    def upsert_fingerprint(
+        self,
+        track_hash: str,
+        hashes: npt.NDArray[np.uint32],
+        times: npt.NDArray[np.int32],
+        version: int,
+    ) -> None:
+        """Store (or replace) the fingerprint for a track.
+
+        Args:
+            track_hash: File hash of the track
+            hashes: Landmark hashes
+            times: Anchor frame of each hash, same length as ``hashes``
+            version: Fingerprint scheme version the hashes were made with
+        """
+        blob = hashes.astype(np.uint32).tobytes() + times.astype(np.int32).tobytes()
+        self.session.merge(
+            FingerprintRow(
+                track_hash=track_hash,
+                version=version,
+                n_hashes=len(hashes),
+                blob=blob,
+                created_at=datetime.now(tz=UTC),
+            )
+        )
+        self.session.commit()
+
+    def get_fingerprinted_hashes(self, version: int) -> set[str]:
+        """File hashes that already have a fingerprint made with ``version``."""
+        stmt = select(FingerprintRow.track_hash).where(FingerprintRow.version == version)
+        return set(self.session.execute(stmt).scalars().all())
+
+    def count_fingerprints(self, version: int) -> int:
+        """Number of stored fingerprints made with ``version``."""
+        stmt = (
+            select(func.count())
+            .select_from(FingerprintRow)
+            .where(FingerprintRow.version == version)
+        )
+        return int(self.session.execute(stmt).scalar_one())
+
+    def sum_fingerprint_hashes(self, version: int) -> int:
+        """Total number of hashes across fingerprints of ``version``."""
+        stmt = select(func.coalesce(func.sum(FingerprintRow.n_hashes), 0)).where(
+            FingerprintRow.version == version
+        )
+        return int(self.session.execute(stmt).scalar_one())
+
+    def fingerprint_signature(self, version: int) -> tuple[int, int, str | None]:
+        """Cheap summary that changes whenever fingerprints of ``version`` change.
+
+        Returns the fingerprint count, total hash count and latest ``created_at``
+        (ISO string, or None when there are none).
+        """
+        stmt = select(
+            func.count(),
+            func.coalesce(func.sum(FingerprintRow.n_hashes), 0),
+            func.max(FingerprintRow.created_at),
+        ).where(FingerprintRow.version == version)
+        count, total, latest = self.session.execute(stmt).one()
+        if isinstance(latest, datetime):
+            latest = latest.isoformat()
+        return int(count), int(total), None if latest is None else str(latest)
+
+    def iter_fingerprints(
+        self, version: int
+    ) -> Iterator[tuple[str, npt.NDArray[np.uint32], npt.NDArray[np.int32]]]:
+        """Yield ``(track_hash, hashes, times)`` for every fingerprint of ``version``."""
+        stmt = select(
+            FingerprintRow.track_hash, FingerprintRow.n_hashes, FingerprintRow.blob
+        ).where(FingerprintRow.version == version)
+        for track_hash, n_hashes, blob in self.session.execute(stmt):
+            hashes = np.frombuffer(blob, dtype=np.uint32, count=n_hashes)
+            times = np.frombuffer(blob, dtype=np.int32, count=n_hashes, offset=4 * n_hashes)
+            yield track_hash, hashes, times
